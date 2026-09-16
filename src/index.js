@@ -8,7 +8,8 @@
 //  - Pilot self-service: POST /api/request-access (queues a pending row),
 //    POST /api/login, GET /api/logout.
 //  - Admin workflow: POST /api/admin/login, GET /api/admin/requests,
-//    POST /api/admin/approve, POST /api/admin/reject, GET /api/admin/logout.
+//    POST /api/admin/approve, POST /api/admin/reject, POST /api/admin/delete,
+//    GET /api/admin/logout.
 //    Approving generates a password, stores its hash, and emails the
 //    plaintext password to the pilot via Resend.
 //
@@ -94,6 +95,7 @@ async function handleApi(request, env, path) {
   if (path === "/api/admin/requests" && method === "GET") return apiAdminList(request, env);
   if (path === "/api/admin/approve" && method === "POST") return apiAdminApprove(request, env);
   if (path === "/api/admin/reject" && method === "POST") return apiAdminReject(request, env);
+  if (path === "/api/admin/delete" && method === "POST") return apiAdminDelete(request, env);
 
   return json({ ok: false, error: "not_found" }, 404);
 }
@@ -247,6 +249,18 @@ async function apiAdminReject(request, env) {
   if (!id) return json({ ok: false, error: "missing_id" }, 400);
 
   await env.DB.prepare("UPDATE pilots SET status = 'rejected' WHERE id = ?").bind(id).run();
+  return json({ ok: true });
+}
+
+async function apiAdminDelete(request, env) {
+  if (!(await requireAdmin(request, env))) return json({ ok: false, error: "unauthorized" }, 401);
+  if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
+
+  const body = await safeJson(request);
+  const id = body && Number(body.id);
+  if (!id) return json({ ok: false, error: "missing_id" }, 400);
+
+  await env.DB.prepare("DELETE FROM pilots WHERE id = ?").bind(id).run();
   return json({ ok: true });
 }
 
