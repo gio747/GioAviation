@@ -17,8 +17,9 @@
 //   SESSION_SECRET  secret, long random string — signs session cookies
 //   ADMIN_PASSWORD  secret — the single admin password for /admin.html
 //   RESEND_API_KEY  secret — from resend.com, used to email credentials
-//   RESEND_FROM     var    — e.g. "GioAviation.aero <access@gioaviation.aero>"
-//     (the domain in RESEND_FROM must be verified in your Resend account)
+//   RESEND_FROM     var    — e.g. "GioAviation.com <access@gioaviation.com>"
+//     (the domain in RESEND_FROM must be verified in your Resend account —
+//     as of now only gioaviation.com is verified there, not gioaviation.aero)
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_COOKIE = "gio_session";
@@ -248,7 +249,7 @@ async function apiAdminReject(request, env) {
 async function sendCredentialsEmail(env, { email, fullName, password }) {
   if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-  const from = env.RESEND_FROM || "GioAviation.aero <access@gioaviation.aero>";
+  const from = env.RESEND_FROM || "GioAviation.com <access@gioaviation.com>";
   const loginUrl = "https://gioaviation.aero/login.html";
 
   const html = `
