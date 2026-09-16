@@ -13,13 +13,16 @@
 //    plaintext password to the pilot via Resend.
 //
 // Required bindings (Worker → Settings → Bindings / Variables & Secrets):
-//   DB              D1 database bound as "DB" (schema.sql)
-//   SESSION_SECRET  secret, long random string — signs session cookies
-//   ADMIN_PASSWORD  secret — the single admin password for /admin.html
-//   RESEND_API_KEY  secret — from resend.com, used to email credentials
-//   RESEND_FROM     var    — e.g. "GioAviation.com <access@gioaviation.com>"
+//   DB                 D1 database bound as "DB" (schema.sql)
+//   SESSION_SECRET     secret, long random string — signs session cookies
+//   ADMIN_PASSWORD     secret — the single admin password for /admin.html
+//   RESEND_API_KEY     secret — from resend.com, used to send email
+//   RESEND_FROM        var    — e.g. "GioAviation.com <access@gioaviation.com>"
 //     (the domain in RESEND_FROM must be verified in your Resend account —
 //     as of now only gioaviation.com is verified there, not gioaviation.aero)
+//   ADMIN_NOTIFY_EMAIL var    — where to send "new access request" notices.
+//     Optional: if unset, new requests are simply not notified by email —
+//     you'd only see them by opening admin.html.
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_COOKIE = "gio_session";
@@ -119,12 +122,15 @@ async function apiRequestAccess(request, env) {
     await env.DB.prepare(
       "UPDATE pilots SET full_name = ?, company = ?, note = ?, status = 'pending', created_at = ? WHERE email = ?"
     ).bind(fullName, company, note, new Date().toISOString(), email).run();
+    await notifyAdminOfNewRequest(env, { email, fullName, company, note });
     return json({ ok: true });
   }
 
   await env.DB.prepare(
     "INSERT INTO pilots (email, full_name, company, note, status, created_at) VALUES (?, ?, ?, ?, 'pending', ?)"
   ).bind(email, fullName, company, note, new Date().toISOString()).run();
+
+  await notifyAdminOfNewRequest(env, { email, fullName, company, note });
 
   return json({ ok: true });
 }
@@ -247,9 +253,6 @@ async function apiAdminReject(request, env) {
 // ------------------------------------------------------------------ email --
 
 async function sendCredentialsEmail(env, { email, fullName, password }) {
-  if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
-  const from = env.RESEND_FROM || "GioAviation.com <access@gioaviation.com>";
   const loginUrl = "https://gioaviation.aero/login.html";
 
   const html = `
@@ -262,18 +265,52 @@ async function sendCredentialsEmail(env, { email, fullName, password }) {
     <p>&mdash; GioAviation.aero</p>
   `;
 
+  await sendEmail(env, {
+    to: email,
+    subject: "Il tuo accesso a GioAviation.aero è stato approvato",
+    html,
+  });
+}
+
+// Best-effort: a pilot submitting the access-request form should not fail
+// just because the admin notification email didn't go out. Errors here are
+// swallowed (not surfaced to the pilot) — admin.html remains the source of
+// truth for pending requests either way.
+async function notifyAdminOfNewRequest(env, { email, fullName, company, note }) {
+  if (!env.ADMIN_NOTIFY_EMAIL) return;
+
+  const html = `
+    <p>Nuova richiesta di accesso su GioAviation.aero:</p>
+    <p><strong>Nome:</strong> ${escapeHtml(fullName)}<br>
+    <strong>Email:</strong> ${escapeHtml(email)}<br>
+    <strong>Compagnia:</strong> ${escapeHtml(company || "—")}<br>
+    <strong>Nota:</strong> ${escapeHtml(note || "—")}</p>
+    <p>Approva o rifiuta da <a href="https://gioaviation.aero/admin.html">admin.html</a>.</p>
+  `;
+
+  try {
+    await sendEmail(env, {
+      to: env.ADMIN_NOTIFY_EMAIL,
+      subject: `Nuova richiesta di accesso — ${fullName}`,
+      html,
+    });
+  } catch (e) {
+    // Intentionally not rethrown — see comment above.
+  }
+}
+
+async function sendEmail(env, { to, subject, html }) {
+  if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
+
+  const from = env.RESEND_FROM || "GioAviation.com <access@gioaviation.com>";
+
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from,
-      to: [email],
-      subject: "Il tuo accesso a GioAviation.aero è stato approvato",
-      html,
-    }),
+    body: JSON.stringify({ from, to: [to], subject, html }),
   });
 
   if (!resp.ok) {

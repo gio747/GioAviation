@@ -17,26 +17,20 @@ Tutto questo gira nel Worker (`src/index.js`), non serve altro codice server.
 
 - Creato il database D1 `gioaviation-db` e applicato lo schema (tabella `pilots`).
 - Collegato il database al Worker `gioaviation` come binding `DB`.
-- Aggiunto la variabile `RESEND_FROM` = `GioAviation.aero <access@gioaviation.aero>`.
+- Aggiunto la variabile `RESEND_FROM` = `GioAviation.com <access@gioaviation.com>` (dominio verificato su Resend).
 
-### Cosa devi fare tu (3 cose, tutte in Cloudflare dashboard → Workers & Pages → gioaviation → Settings → Runtime variables and secrets → Add variable, spuntando **Secret**)
+### Cosa devi fare tu, in Cloudflare dashboard → Workers & Pages → gioaviation → Settings → Runtime variables and secrets
 
-Non inserisco io questi valori: sono credenziali, e non è corretto che io le maneggi al posto tuo. Aggiungile tu, sono già pronte da incollare:
+Non inserisco io questi valori: sono credenziali, e non è corretto che io le maneggi al posto tuo.
 
-1. **`SESSION_SECRET`** (firma i cookie di sessione, non è una password che usi tu — un valore lungo a caso va bene):
-   ```
-   vIPincouDbH6y6NhARdllEuKRIcZDu5WtWoOGQP5q3Vt91MJJ8zSAGsLH5PkVqiM
-   ```
-2. **`ADMIN_PASSWORD`** (la password per entrare in `admin.html`; puoi tenere questa o sceglierne una tua):
-   ```
-   RxwYbCJE56qe6bPR
-   ```
-3. **`RESEND_API_KEY`** — questa deve venire da te:
-   - Crea un account gratuito su [resend.com](https://resend.com) (100 email/giorno gratis, sufficiente per iniziare).
-   - Verifica un dominio mittente. **Consiglio:** usa `gioaviation.com` invece di `gioaviation.aero` per ora, perché `.com` è già attivo su Cloudflare mentre `.aero` è ancora in fase di propagazione nameserver — se vuoi, dimmelo e ti aggiorno `RESEND_FROM` di conseguenza e aggiungo io i record DNS che Resend ti chiede (sono record pubblici, non credenziali, posso farlo).
-   - Resend ti dà una API key (`re_...`): incollala come secret `RESEND_API_KEY`.
+1. **`SESSION_SECRET`** (tipo **Secret**) — firma i cookie di sessione: un valore lungo a caso, generato da te o da un password manager.
+2. **`ADMIN_PASSWORD`** (tipo **Secret**, non "Variable" — altrimenti resta leggibile in chiaro da chiunque acceda al dashboard) — la password per entrare in `admin.html`.
+3. **`RESEND_API_KEY`** (tipo **Secret**) — da [resend.com](https://resend.com) → API Keys. Verifica il dominio mittente: solo `gioaviation.com` è verificato per ora (`gioaviation.aero` no, DNS ancora in propagazione), quindi `RESEND_FROM` nel codice usa `gioaviation.com`.
+4. **`ADMIN_NOTIFY_EMAIL`** (tipo **Variable**, non è una credenziale) — l'indirizzo a cui ricevere una notifica ogni volta che un pilota compila il modulo di richiesta accesso. Opzionale: se non la imposti, le nuove richieste restano visibili solo aprendo `admin.html` manualmente.
 
 Finché `RESEND_API_KEY` non è configurata, l'approvazione nel pannello admin funziona comunque (l'account viene creato), ma vedrai un errore onesto invece della conferma di invio email — a quel punto dovrai comunicare tu la password al pilota manualmente, recuperandola dal database non è possibile perché è salvata solo cifrata.
+
+**Nota sul deploy automatico da Git:** ogni push su GitHub fa ripartire un deploy via Wrangler. In un caso ho osservato le secret sparire dopo un deploy così — se dopo un push noti login/email che smettono di funzionare, ricontrolla questa pagina prima di cercare altrove.
 
 ### File nuovi/modificati in questo aggiornamento
 
@@ -59,7 +53,6 @@ Il Worker è collegato al repository GitHub `gio747/GioAviation` (build automati
 ## Cosa manca ancora prima che il sito sia davvero completo
 
 - I tre PDF mental map reali (al momento sono ancora placeholder `.txt` in `resources/`).
-- La password `RESEND_API_KEY` (vedi sopra) — senza quella l'invio email delle credenziali non parte.
 - Le tre landing dedicate (Equipaggio, Operatori, Candidati), rimandate per il lancio minimo.
 
 ## Nota sulla privacy dei dati raccolti
