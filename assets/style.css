@@ -54,9 +54,10 @@ p{ margin: 0; }
 .btn.ghost{ background: transparent; color: var(--navy); border: 1.5px solid var(--line); }
 .btn.ghost:hover{ border-color: var(--sky); color: var(--sky-strong); }
 
-header.site{ padding-block: 20px; border-bottom: 1px solid var(--line); }
+header.site{ padding-block: 16px; border-bottom: 1px solid var(--line); }
 header.site .wrap{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .logo{ display:flex; align-items:center; gap:10px; }
+.logo img{ display:block; height:40px; width:auto; }
 .logo .name{ font-family:"Plus Jakarta Sans"; font-weight:800; font-size:1.1875rem; color: var(--navy); }
 .logo .name b{ color: var(--sky-strong); font-weight:800; }
 nav.primary{ display:flex; gap:26px; flex-wrap:wrap; align-items:center; }
@@ -170,6 +171,8 @@ section.alt{ background: var(--tint); }
 
 footer{ background: var(--navy); color: #CBE0F0; padding-block: 30px; margin-top: 0; }
 footer .wrap{ display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+footer .logo-fine{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+footer .logo-fine img{ display:block; height:28px; width:auto; }
 footer .fine{ font-size:0.8125rem; color: #8FB3CE; }
 footer nav{ display:flex; gap:20px; flex-wrap:wrap; }
 footer nav a{ font-family:"Plus Jakarta Sans"; font-weight:600; font-size:0.875rem; color:#E3F1FA; }
@@ -184,4 +187,10 @@ footer nav a:hover{ color:#fff; }
   .standard-grid{ grid-template-columns:1fr; }
   .section-head h2{ font-size:1.5rem; }
   .cred-hero h1{ font-size: 2rem; }
+  .logo img{ height:32px; }
+  footer .logo-fine img{ height:24px; }
+}
+
+@media (max-width: 420px){
+  .logo img{ height:28px; }
 }
