@@ -25,13 +25,21 @@ const SESSION_COOKIE = "gio_session";
 const PILOT_SESSION_DAYS = 30;
 const ADMIN_SESSION_HOURS = 12;
 
-// Paths servable with no session at all.
+// Paths servable with no session at all. Cloudflare's static-assets layer
+// normalizes "/foo.html" requests to "/foo" (html_handling default), and
+// with run_worker_first that normalized request comes back through this
+// same fetch handler — so both forms must be listed, or a protected route
+// serving the extensionless redirect target loops forever.
 const PUBLIC_PATHS = new Set([
   "/",
   "/index.html",
+  "/index",
   "/richiedi-accesso.html",
+  "/richiedi-accesso",
   "/login.html",
+  "/login",
   "/admin-login.html",
+  "/admin-login",
 ]);
 
 export default {
@@ -47,7 +55,7 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    if (path === "/admin.html") {
+    if (path === "/admin.html" || path === "/admin") {
       const session = await getSession(request, env);
       if (!session || session.role !== "admin") {
         return Response.redirect(new URL("/admin-login.html", url), 302);
