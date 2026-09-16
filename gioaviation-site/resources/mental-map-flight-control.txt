@@ -1,7 +1,0 @@
-PLACEHOLDER — Flight Control System Mental Map (747-400)
-
-This is a placeholder file used to test the email-gate download flow end to end.
-Replace this file with the real PDF (same relative path, e.g.
-resources/mental-map-hydraulic.pdf) and update the corresponding
-data-doc attribute and file extension in index.html once the real
-document is ready to publish.

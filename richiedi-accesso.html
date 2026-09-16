@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request access — GioAviation.aero</title>
+<meta name="description" content="Request access to the GioAviation.aero pilot resource library. Each request is reviewed individually.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <circle cx="15" cy="15" r="15" fill="#E3F1FA"/>
+        <path d="M15 6L18 13.5L26 15L18 16.5L15 24L12 16.5L4 15L12 13.5L15 6Z" fill="#3E9FDB"/>
+      </svg>
+      <span class="name">GioAviation<b>.aero</b></span>
+    </div>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="richiedi-accesso.html" aria-current="page">Request access</a>
+      <a href="login.html" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Access is by approval</span>
+      <h1>Request access to the resource library.</h1>
+      <p style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft); max-width:56ch;">Every request is reviewed individually — there's no automatic sign-up. If approved, your login credentials arrive by email.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="max-width:640px;">
+      <form id="access-form" class="contact-form">
+        <div class="field">
+          <label for="full_name">Full name</label>
+          <input type="text" id="full_name" name="full_name" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="company">Airline / company</label>
+          <input type="text" id="company" name="company" autocomplete="organization">
+        </div>
+        <div class="field">
+          <label for="note">Role / anything relevant (optional)</label>
+          <textarea id="note" name="note" placeholder="e.g. First Officer B747-400, type-rating candidate, …"></textarea>
+        </div>
+        <button type="submit" class="btn" style="align-self:flex-start;">Submit request</button>
+        <div id="form-status" class="form-status" role="status"></div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="fine">© 2026 GioAviation.aero</span>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="richiedi-accesso.html">Request access</a>
+      <a href="login.html">Log in</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var form = document.getElementById('access-form');
+  var status = document.getElementById('form-status');
+  var ERR = {
+    invalid_email: 'Please enter a valid email address.',
+    missing_name: 'Please enter your full name.',
+    already_pending: 'A request from this email is already pending review.',
+    already_approved: 'This email already has approved access — try logging in instead.',
+    db_not_configured: 'Access requests are not yet configured on this site. Please contact the site owner.',
+    bad_request: 'Something went wrong. Please try again.'
+  };
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    status.className = 'form-status';
+    status.textContent = '';
+    var payload = {
+      full_name: document.getElementById('full_name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      company: document.getElementById('company').value.trim(),
+      note: document.getElementById('note').value.trim()
+    };
+    fetch('/api/request-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
+      .then(function(result){
+        if (result.ok && result.data.ok){
+          status.className = 'form-status ok';
+          status.textContent = 'Request submitted. You will receive an email if approved.';
+          form.reset();
+        } else {
+          var code = result.data && result.data.error;
+          status.className = 'form-status err';
+          status.textContent = ERR[code] || 'Could not submit the request. Please try again.';
+        }
+      })
+      .catch(function(){
+        status.className = 'form-status err';
+        status.textContent = 'Connection problem — please try again in a moment.';
+      });
+  });
+})();
+</script>
+</body>
+</html>

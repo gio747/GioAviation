@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource library — GioAviation.aero</title>
+<meta name="description" content="747-400 mental maps and technical reference material for approved pilots.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <circle cx="15" cy="15" r="15" fill="#E3F1FA"/>
+        <path d="M15 6L18 13.5L26 15L18 16.5L15 24L12 16.5L4 15L12 13.5L15 6Z" fill="#3E9FDB"/>
+      </svg>
+      <span class="name">GioAviation<b>.aero</b></span>
+    </div>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="risorse.html" aria-current="page">Resources</a>
+      <a href="credenziali.html">Credentials</a>
+      <a href="contatti.html">Contact</a>
+      <a href="/api/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="resources">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Flight Crew</span><h2>Resource library</h2></div>
+      </div>
+      <div class="resource-grid">
+        <div class="resource-card">
+          <div class="top"><span class="tag">Mental Map</span></div>
+          <div class="body">
+            <h3>Hydraulic System — Quick Reference</h3>
+            <p>Single-sheet system logic across all four hydraulic systems, sourced from FCOM/QRH, prioritizing realistic dual-system-loss scenarios over rare edge cases.</p>
+            <a class="btn ghost" href="resources/mental-map-hydraulic.txt" download style="margin-top:6px;">Download</a>
+          </div>
+        </div>
+        <div class="resource-card">
+          <div class="top"><span class="tag">Mental Map</span></div>
+          <div class="body">
+            <h3>Electrical System — Quick Reference</h3>
+            <p>System logic and failure-mode recall aid for the 747-400 electrical architecture, sourced from FCOM/QRH.</p>
+            <a class="btn ghost" href="resources/mental-map-electrical.txt" download style="margin-top:6px;">Download</a>
+          </div>
+        </div>
+        <div class="resource-card">
+          <div class="top"><span class="tag">Mental Map</span></div>
+          <div class="body">
+            <h3>Flight Control System — Quick Reference</h3>
+            <p>Recall aid for the flight control system, including a brief system schematic, sourced from FCOM/QRH.</p>
+            <a class="btn ghost" href="resources/mental-map-flight-control.txt" download style="margin-top:6px;">Download</a>
+          </div>
+        </div>
+      </div>
+      <p class="resource-note">Downloads are placeholder files for now — real PDFs pending, see README-DEPLOY.md.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="fine">© 2026 GioAviation.aero</span>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="risorse.html">Resources</a>
+      <a href="credenziali.html">Credentials</a>
+      <a href="contatti.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

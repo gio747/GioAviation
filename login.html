@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — GioAviation.aero</title>
+<meta name="description" content="Log in to the GioAviation.aero pilot resource library.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <circle cx="15" cy="15" r="15" fill="#E3F1FA"/>
+        <path d="M15 6L18 13.5L26 15L18 16.5L15 24L12 16.5L4 15L12 13.5L15 6Z" fill="#3E9FDB"/>
+      </svg>
+      <span class="name">GioAviation<b>.aero</b></span>
+    </div>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="richiedi-accesso.html">Request access</a>
+      <a href="login.html" aria-current="page" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Approved pilots</span>
+      <h1>Log in to the resource library.</h1>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="max-width:440px;">
+      <form id="login-form" class="contact-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn" style="align-self:flex-start;">Log in</button>
+        <div id="form-status" class="form-status" role="status"></div>
+      </form>
+      <p style="margin-top:20px; font-size:0.9375rem; color:var(--ink-soft);">No account yet? <a href="richiedi-accesso.html" style="color:var(--sky-strong); font-weight:600;">Request access</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="fine">© 2026 GioAviation.aero</span>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="richiedi-accesso.html">Request access</a>
+      <a href="login.html">Log in</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var form = document.getElementById('login-form');
+  var status = document.getElementById('form-status');
+  function nextUrl(){
+    var params = new URLSearchParams(window.location.search);
+    var next = params.get('next');
+    return (next && next.indexOf('/') === 0) ? next : 'risorse.html';
+  }
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    status.className = 'form-status';
+    status.textContent = '';
+    var payload = {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value
+    };
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
+      .then(function(result){
+        if (result.ok && result.data.ok){
+          window.location.href = nextUrl();
+        } else {
+          status.className = 'form-status err';
+          status.textContent = 'Incorrect email or password, or access not yet approved.';
+        }
+      })
+      .catch(function(){
+        status.className = 'form-status err';
+        status.textContent = 'Connection problem — please try again in a moment.';
+      });
+  });
+})();
+</script>
+</body>
+</html>

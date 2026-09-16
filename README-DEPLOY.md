@@ -1,79 +1,71 @@
 # GioAviation.aero — guida alla pubblicazione
 
-Sito statico, nessuna build necessaria: 3 pagine HTML + 1 foglio di stile. Pronto per Cloudflare Pages, completamente indipendente da qualsiasi altro tuo account (Vercel/NutriCalc esclusi di proposito).
+## AGGIORNAMENTO — accesso riservato con approvazione manuale
 
-## Cosa contiene questa cartella
+Il sito è passato da "libreria pubblica con gate email" ad accesso riservato: solo `index.html` resta pubblico, tutto il resto (libreria risorse, credenziali, contatti) richiede login. L'accesso è concesso solo dopo tua approvazione manuale di ogni richiesta.
 
-- `index.html` — Home, con anteprima della libreria risorse (3 mental map 747-400 già esistenti, protette da gate email: sono ancora file placeholder in attesa dei PDF veri)
-- `credenziali.html` — Pagina credenziali
-- `contatti.html` — Pagina contatti, con modulo collegato a Formspree (da configurare, vedi sotto) e email diretta di riserva
-- `assets/style.css` — sistema di stile condiviso dalle tre pagine
+### Come funziona ora
 
-## Passo 1 — Pubblicare su Cloudflare Pages (15 minuti)
+1. Un pilota compila `richiedi-accesso.html` (nome, email, compagnia, nota) → la richiesta finisce in coda "pending" in un database Cloudflare D1.
+2. Tu apri `admin.html` (protetta da una password admin separata, vedi sotto), vedi le richieste in attesa, e clicchi **Approve** o **Reject**.
+3. All'approvazione, il sistema genera automaticamente una password, la salva in forma cifrata (mai in chiaro), e manda al pilota un'email con le credenziali tramite Resend.
+4. Il pilota fa login su `login.html` e accede a `risorse.html`, `credenziali.html`, `contatti.html`.
 
-**Correzione importante:** la modalità "Upload assets" (drag&drop diretto da dashboard) NON supporta la cartella `functions/`, è una limitazione documentata di Cloudflare, non un errore tuo. Se il sito include il gate email (e lo include), va pubblicato collegando un repository Git, non con l'upload diretto.
+Tutto questo gira nel Worker (`src/index.js`), non serve altro codice server.
 
-1. Crea un account gratuito su [github.com](https://github.com) se non lo hai già (puoi anche usare il tuo account esistente, basta un repository nuovo e separato).
-2. Crea un nuovo repository, vuoto, ad esempio `gioaviation-site`.
-3. Nella pagina del repository su GitHub, usa **Add file → Upload files** e trascina dentro tutto il contenuto della cartella `gioaviation-site` (inclusi i sottocartelle `assets/`, `functions/`, `resources/` — i browser moderni mantengono la struttura delle cartelle nel trascinamento). Conferma il commit.
-4. Vai su [pages.cloudflare.com](https://pages.cloudflare.com) e crea un account gratuito (nuovo, separato da tutto il resto).
-5. Nel dashboard scegli **Workers & Pages → Create → Pages → Connect to Git**, autorizza l'accesso a GitHub e seleziona il repository appena creato.
-6. Nelle impostazioni di build: lascia vuoto il **Build command**, e come **Build output directory** metti `/` (la root del repository).
-7. Avvia il deploy. Cloudflare ti assegna un indirizzo tipo `gioaviation-site.pages.dev`, e questa volta la cartella `functions/` viene riconosciuta correttamente.
+### Cosa ho già fatto io su Cloudflare (dashboard)
 
-Ogni volta che vuoi aggiornare il sito in futuro, basta caricare i file modificati sullo stesso repository GitHub (sempre da "Add file → Upload files", sovrascrivendo i file esistenti): Cloudflare ripubblica automaticamente ad ogni commit.
+- Creato il database D1 `gioaviation-db` e applicato lo schema (tabella `pilots`).
+- Collegato il database al Worker `gioaviation` come binding `DB`.
+- Aggiunto la variabile `RESEND_FROM` = `GioAviation.aero <access@gioaviation.aero>`.
 
-## Passo 2 — Collegare il dominio .aero
+### Cosa devi fare tu (3 cose, tutte in Cloudflare dashboard → Workers & Pages → gioaviation → Settings → Runtime variables and secrets → Add variable, spuntando **Secret**)
 
-Una volta registrato il dominio (vedi la lista registrar di cui abbiamo già parlato):
+Non inserisco io questi valori: sono credenziali, e non è corretto che io le maneggi al posto tuo. Aggiungile tu, sono già pronte da incollare:
 
-1. Nel progetto Cloudflare Pages, vai su **Custom domains → Set up a custom domain**.
-2. Inserisci `gioaviation.aero` (e se vuoi anche `www.gioaviation.aero`).
-3. Cloudflare ti indica i record DNS da impostare presso il tuo registrar. Se il dominio viene gestito direttamente su Cloudflare (puoi anche trasferire la gestione DNS lì gratuitamente), il collegamento è automatico.
-
-Il sito resta comunque visitabile su `.pages.dev` prima ancora di avere il dominio pronto.
-
-## Passo 3 — Attivare il gate email per i download (Cloudflare KV, gratuito)
-
-Per scaricare i documenti l'utente deve prima inserire un'email valida. Il meccanismo è già scritto (`assets/gate.js` + `functions/api/subscribe.js`), manca solo collegare lo spazio dove Cloudflare salva gli indirizzi raccolti.
-
-1. Nel dashboard Cloudflare, vai su **Workers & Pages → KV** e crea un nuovo namespace, chiamalo ad esempio `gioaviation-subscribers`.
-2. Torna sul tuo progetto Pages → **Settings → Functions → KV namespace bindings**.
-3. Aggiungi un binding con **Variable name** esattamente `SUBSCRIBERS`, collegato al namespace appena creato.
-4. Rifai il deploy: con il collegamento a Git basta un nuovo commit sul repository (anche solo ricaricando un file qualsiasi) perché Cloudflare ripubblichi e il binding diventi attivo.
-
-Da quel momento ogni email inserita per sbloccare un documento viene salvata nel namespace KV, consultabile dal dashboard Cloudflare (Workers & Pages → KV → il tuo namespace → Browse). Ogni voce è nel formato `email::nomefile → {email, doc, data}`.
-
-**Importante:** i tre documenti nella cartella `resources/` sono file placeholder `.txt`, non i PDF veri (vedi sotto), servono solo per verificare che tutto il flusso, dal modulo email al download, funzioni davvero. Puoi già testarlo ora: inserisci una tua email su una qualsiasi card della Home e verifica che il file placeholder venga scaricato e l'indirizzo compaia nel namespace KV.
-
-Quando avrai i PDF reali: rinomina i file in `resources/` (stesso nome, estensione `.pdf`) e aggiorna in `index.html` l'attributo `data-doc` di ogni pulsante con il nuovo nome file.
-
-## Passo 4 — Attivare il modulo contatti (Formspree, gratuito)
-
-Il modulo in `contatti.html` non invia ancora email: manca il tuo endpoint.
-
-1. Crea un account gratuito su [formspree.io](https://formspree.io) (piano free: 50 invii/mese, sufficiente per iniziare).
-2. Crea un nuovo form, ti darà un ID tipo `xayzabcd`.
-3. Apri `contatti.html`, cerca la riga:
+1. **`SESSION_SECRET`** (firma i cookie di sessione, non è una password che usi tu — un valore lungo a caso va bene):
    ```
-   action="https://formspree.io/f/REPLACE_WITH_YOUR_FORMSPREE_ID"
+   vIPincouDbH6y6NhARdllEuKRIcZDu5WtWoOGQP5q3Vt91MJJ8zSAGsLH5PkVqiM
    ```
-   e sostituisci `REPLACE_WITH_YOUR_FORMSPREE_ID` con il tuo ID reale.
-4. Ricarica il sito (ricarica su Cloudflare Pages se già pubblicato) e il modulo funziona.
+2. **`ADMIN_PASSWORD`** (la password per entrare in `admin.html`; puoi tenere questa o sceglierne una tua):
+   ```
+   RxwYbCJE56qe6bPR
+   ```
+3. **`RESEND_API_KEY`** — questa deve venire da te:
+   - Crea un account gratuito su [resend.com](https://resend.com) (100 email/giorno gratis, sufficiente per iniziare).
+   - Verifica un dominio mittente. **Consiglio:** usa `gioaviation.com` invece di `gioaviation.aero` per ora, perché `.com` è già attivo su Cloudflare mentre `.aero` è ancora in fase di propagazione nameserver — se vuoi, dimmelo e ti aggiorno `RESEND_FROM` di conseguenza e aggiungo io i record DNS che Resend ti chiede (sono record pubblici, non credenziali, posso farlo).
+   - Resend ti dà una API key (`re_...`): incollala come secret `RESEND_API_KEY`.
 
-Finché non lo fai, il modulo mostra un messaggio onesto ("form non ancora configurato") invece di fingere di aver inviato il messaggio.
+Finché `RESEND_API_KEY` non è configurata, l'approvazione nel pannello admin funziona comunque (l'account viene creato), ma vedrai un errore onesto invece della conferma di invio email — a quel punto dovrai comunicare tu la password al pilota manualmente, recuperandola dal database non è possibile perché è salvata solo cifrata.
 
-## Cosa manca prima che il sito sia davvero completo
+### File nuovi/modificati in questo aggiornamento
 
-- **I tre PDF mental map reali** (Idraulico, Elettrico, Comandi di volo): non li ho, esistono in un altro progetto/sessione. Appena me li carichi, sostituisco i placeholder in `resources/` e aggiorno i riferimenti in `index.html` (vedi Passo 3).
-- **Il namespace KV** va creato e collegato su Cloudflare perché il gate email funzioni davvero in produzione (Passo 3) — finché non lo fai, il modulo mostra un errore onesto invece di far finta di salvare l'email.
-- **Indirizzo email reale** su dominio .aero in `contatti.html` (per ora c'è un placeholder `contact@gioaviation.aero`).
-- **Pagine non ancora costruite**: libreria risorse completa e le tre landing dedicate (Equipaggio, Operatori, Candidati) — rimandate volutamente per il lancio minimo, come deciso insieme.
+- `index.html` — ora è la sola pagina pubblica: presenta il sito e rimanda a "Request access" / "Log in", niente più libreria download qui.
+- `richiedi-accesso.html` — nuovo modulo di richiesta accesso.
+- `login.html` — nuovo login pilota.
+- `risorse.html` — nuova libreria risorse (le stesse 3 mental map, ora protette da login invece che dal vecchio gate email).
+- `admin-login.html`, `admin.html` — nuovo pannello per approvare/rifiutare le richieste.
+- `schema.sql` — schema del database D1 (già applicato da me in produzione, tienilo comunque nel repository).
+- `src/index.js` — riscritto: gestisce login, sessioni, approvazioni, invio email; il vecchio endpoint `/api/subscribe` e il gate email sono stati rimossi.
+- `wrangler.jsonc` — aggiunto il binding D1.
+- Rimossi: `assets/gate.js`, `functions/api/subscribe.js` (sistema precedente, sostituito).
 
-## Nota sulla privacy delle email raccolte
+Il modulo contatti (`contatti.html`, Formspree) resta invariato, solo dietro login adesso.
 
-Stai raccogliendo dati personali (email) da utenti reali. Prima di andare online con traffico vero, aggiungi almeno una riga di informativa privacy essenziale vicino al modulo (a cosa serve l'email, che non viene condivisa) — non è ancora presente nelle pagine consegnate qui, ed è un requisito di correttezza verso i tuoi utenti, non solo un dettaglio legale formale.
+## Come pubblicare questo aggiornamento
+
+Il Worker è collegato al repository GitHub `gio747/GioAviation` (build automatica ad ogni commit). Questo aggiornamento è stato caricato direttamente sul repository sovrascrivendo i file esistenti. Cloudflare ripubblica da solo dopo il commit.
+
+## Cosa manca ancora prima che il sito sia davvero completo
+
+- I tre PDF mental map reali (al momento sono ancora placeholder `.txt` in `resources/`).
+- La password `RESEND_API_KEY` (vedi sopra) — senza quella l'invio email delle credenziali non parte.
+- Le tre landing dedicate (Equipaggio, Operatori, Candidati), rimandate per il lancio minimo.
+
+## Nota sulla privacy dei dati raccolti
+
+Il modulo di richiesta accesso raccoglie nome, email e azienda di persone reali. Prima di andare online con traffico vero, aggiungi una riga di informativa privacy essenziale vicino al modulo (a cosa serve il dato, che non viene condiviso con terzi oltre a Resend per l'invio email) — non è ancora presente, ed è un requisito di correttezza verso i tuoi utenti.
 
 ## Nota su indipendenza
 
-Nessun file qui referenzia Vercel, il team NutriCalc, o altri tuoi progetti. Font caricati da Google Fonts (CDN pubblico, nessun account). L'unica dipendenza esterna per il funzionamento del form è Formspree, ed è a tuo nome, non collegata a nient'altro.
+Nessun file qui referenzia Vercel, il team NutriCalc, o altri tuoi progetti. Font caricati da Google Fonts (CDN pubblico, nessun account). Le uniche dipendenze esterne sono Formspree (modulo contatti) e Resend (invio credenziali), entrambe a tuo nome.

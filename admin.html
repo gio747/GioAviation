@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Access requests — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <circle cx="15" cy="15" r="15" fill="#E3F1FA"/>
+        <path d="M15 6L18 13.5L26 15L18 16.5L15 24L12 16.5L4 15L12 13.5L15 6Z" fill="#3E9FDB"/>
+      </svg>
+      <span class="name">GioAviation<b>.aero</b></span>
+    </div>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="/api/admin/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Admin</span>
+      <h1>Access requests</h1>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div id="list-status" class="form-status" role="status"></div>
+      <div id="pending-block" style="display:none;">
+        <h2 style="font-size:1.25rem; margin-bottom:16px;">Pending</h2>
+        <div id="pending-table"></div>
+      </div>
+      <div id="other-block" style="display:none; margin-top:48px;">
+        <h2 style="font-size:1.25rem; margin-bottom:16px;">Approved &amp; rejected</h2>
+        <div id="other-table"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="fine">© 2026 GioAviation.aero</span>
+    <nav><a href="index.html">Home</a></nav>
+  </div>
+</footer>
+
+<style>
+  .admin-row{ display:grid; grid-template-columns: 1.4fr 1fr 0.9fr 1.4fr 0.9fr; gap:14px; align-items:center; padding:16px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:var(--paper); }
+  .admin-row .muted{ color:var(--grey); font-size:0.8125rem; }
+  .admin-row .name{ font-family:"Plus Jakarta Sans"; font-weight:700; color:var(--navy); }
+  .admin-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .admin-row .actions button{ font-family:"Plus Jakarta Sans"; font-weight:700; font-size:0.8125rem; padding:8px 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
+  .admin-row .actions button.approve{ background:var(--sky); color:#fff; border-color:var(--sky); }
+  .admin-row .actions button.reject{ color:#B3311C; border-color:#F3CFC9; }
+  .pill{ display:inline-block; font-family:"Plus Jakarta Sans"; font-weight:700; font-size:0.6875rem; letter-spacing:0.04em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
+  .pill.pending{ background:#FCF0DE; color:#B8752B; }
+  .pill.approved{ background:#E6F6EC; color:#1E7A3D; }
+  .pill.rejected{ background:#FBE9E7; color:#B3311C; }
+  @media (max-width: 860px){ .admin-row{ grid-template-columns:1fr; } .admin-row .actions{ justify-content:flex-start; } }
+</style>
+
+<script>
+(function(){
+  var listStatus = document.getElementById('list-status');
+  var pendingBlock = document.getElementById('pending-block');
+  var otherBlock = document.getElementById('other-block');
+  var pendingTable = document.getElementById('pending-table');
+  var otherTable = document.getElementById('other-table');
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function rowHtml(p, showActions){
+    var actions = '';
+    if (showActions){
+      actions = '<div class="actions">' +
+        '<button type="button" class="approve" data-id="' + p.id + '" data-action="approve">Approve</button>' +
+        '<button type="button" class="reject" data-id="' + p.id + '" data-action="reject">Reject</button>' +
+        '</div>';
+    } else {
+      actions = '<div class="actions"><span class="pill ' + p.status + '">' + esc(p.status) + '</span></div>';
+    }
+    return '<div class="admin-row">' +
+      '<div><div class="name">' + esc(p.full_name) + '</div><div class="muted">' + esc(p.email) + '</div></div>' +
+      '<div>' + esc(p.company || '—') + '</div>' +
+      '<div class="muted">' + esc((p.created_at || '').slice(0,10)) + '</div>' +
+      '<div class="muted">' + esc(p.note || '') + '</div>' +
+      actions +
+      '</div>';
+  }
+
+  function load(){
+    fetch('/api/admin/requests')
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(data){
+        if (!data) return;
+        if (!data.ok){
+          listStatus.className = 'form-status err';
+          listStatus.textContent = 'Could not load requests.';
+          return;
+        }
+        var pending = data.pilots.filter(function(p){ return p.status === 'pending'; });
+        var other = data.pilots.filter(function(p){ return p.status !== 'pending'; });
+
+        listStatus.textContent = '';
+        listStatus.className = 'form-status';
+
+        pendingBlock.style.display = pending.length ? 'block' : 'none';
+        pendingTable.innerHTML = pending.map(function(p){ return rowHtml(p, true); }).join('') ||
+          '<p style="color:var(--grey);">No pending requests.</p>';
+
+        otherBlock.style.display = other.length ? 'block' : 'none';
+        otherTable.innerHTML = other.map(function(p){ return rowHtml(p, false); }).join('');
+
+        if (!pending.length && !other.length){
+          listStatus.textContent = 'No access requests yet.';
+        }
+      })
+      .catch(function(){
+        listStatus.className = 'form-status err';
+        listStatus.textContent = 'Connection problem — please reload.';
+      });
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var id = btn.dataset.id;
+    var action = btn.dataset.action;
+    btn.disabled = true;
+    fetch('/api/admin/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (data.ok && action === 'approve'){
+          listStatus.className = data.email_sent ? 'form-status ok' : 'form-status err';
+          listStatus.textContent = data.email_sent
+            ? 'Approved — credentials emailed.'
+            : 'Approved, but the email could not be sent (' + (data.email_error || 'unknown error') + '). Configure RESEND_API_KEY / RESEND_FROM.';
+        }
+        load();
+      })
+      .catch(function(){
+        listStatus.className = 'form-status err';
+        listStatus.textContent = 'Action failed — please try again.';
+        btn.disabled = false;
+      });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

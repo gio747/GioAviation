@@ -6,5 +6,15 @@
     "directory": "./",
     "binding": "ASSETS",
     "not_found_handling": "404-page"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gioaviation-db",
+      "database_id": "e676af6b-872c-4b77-9cc3-4536daf12854"
+    }
+  ],
+  "vars": {
+    "RESEND_FROM": "GioAviation.aero <access@gioaviation.aero>"
   }
 }
