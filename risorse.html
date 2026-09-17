@@ -27,6 +27,7 @@
     <nav class="primary">
       <a href="index.html">Home</a>
       <a href="risorse.html" aria-current="page">Resources</a>
+      <a href="articoli.html">Articles</a>
       <a href="credenziali.html">Credentials</a>
       <a href="contatti.html">Contact</a>
       <a href="/api/logout">Log out</a>
@@ -38,35 +39,10 @@
   <section id="resources">
     <div class="wrap">
       <div class="section-head">
-        <div><span class="eyebrow">Flight Crew</span><h2>Resource library</h2></div>
+        <div><span class="eyebrow">Approved pilots</span><h2>Resource library</h2></div>
       </div>
-      <div class="resource-grid">
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Hydraulic System — Quick Reference</h3>
-            <p>Single-sheet system logic across all four hydraulic systems, sourced from FCOM/QRH, prioritizing realistic dual-system-loss scenarios over rare edge cases.</p>
-            <a class="btn ghost" href="resources/mental-map-hydraulic.txt" download style="margin-top:6px;">Download</a>
-          </div>
-        </div>
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Electrical System — Quick Reference</h3>
-            <p>System logic and failure-mode recall aid for the 747-400 electrical architecture, sourced from FCOM/QRH.</p>
-            <a class="btn ghost" href="resources/mental-map-electrical.txt" download style="margin-top:6px;">Download</a>
-          </div>
-        </div>
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Flight Control System — Quick Reference</h3>
-            <p>Recall aid for the flight control system, including a brief system schematic, sourced from FCOM/QRH.</p>
-            <a class="btn ghost" href="resources/mental-map-flight-control.txt" download style="margin-top:6px;">Download</a>
-          </div>
-        </div>
-      </div>
-      <p class="resource-note">Downloads are placeholder files for now — real PDFs pending, see README-DEPLOY.md.</p>
+      <div id="status" class="form-status" role="status"></div>
+      <div id="categories"></div>
     </div>
   </section>
 </main>
@@ -80,10 +56,84 @@
     <nav>
       <a href="index.html">Home</a>
       <a href="risorse.html">Resources</a>
+      <a href="articoli.html">Articles</a>
       <a href="credenziali.html">Credentials</a>
       <a href="contatti.html">Contact</a>
     </nav>
   </div>
 </footer>
+
+<script>
+(function(){
+  var status = document.getElementById('status');
+  var container = document.getElementById('categories');
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatBytes(n){
+    if (!n) return '';
+    if (n < 1024*1024) return Math.round(n/1024) + ' KB';
+    return (n/1024/1024).toFixed(1) + ' MB';
+  }
+
+  fetch('/api/documents')
+    .then(function(res){
+      if (res.status === 401){ window.location.href = 'login.html?next=' + encodeURIComponent(location.pathname); return null; }
+      return res.json();
+    })
+    .then(function(data){
+      if (!data) return;
+      if (!data.ok){
+        status.className = 'form-status err';
+        status.textContent = 'Could not load the resource library.';
+        status.style.display = 'block';
+        return;
+      }
+      if (!data.documents.length){
+        status.className = 'form-status';
+        status.textContent = 'No documents published yet — check back soon.';
+        status.style.display = 'block';
+        return;
+      }
+      status.style.display = 'none';
+
+      var groups = {};
+      var order = [];
+      data.documents.forEach(function(d){
+        var key = d.category_name || 'Uncategorized';
+        if (!groups[key]){ groups[key] = []; order.push(key); }
+        groups[key].push(d);
+      });
+
+      container.innerHTML = order.map(function(name){
+        var cards = groups[name].map(function(d){
+          return '<div class="resource-card">' +
+            '<div class="top"><span class="tag">' + esc(name) + '</span>' +
+            (d.revision_label ? '<span class="status" style="background:var(--success);">' + esc(d.revision_label) + '</span>' : '') +
+            '</div>' +
+            '<div class="body">' +
+              '<h3>' + esc(d.title) + '</h3>' +
+              (d.description ? '<p>' + esc(d.description) + '</p>' : '') +
+              '<span class="meta" style="font-size:0.8125rem; color:var(--grey);">' +
+                (d.revision_date ? 'Revised ' + esc(d.revision_date) : '') +
+                (d.file_size ? ' · ' + formatBytes(d.file_size) : '') +
+              '</span>' +
+              '<a class="btn ghost" href="/api/documents/download?id=' + d.id + '" style="margin-top:6px;">Download PDF</a>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        return '<div class="resource-category"><h3>' + esc(name) + '</h3><div class="resource-grid">' + cards + '</div></div>';
+      }).join('');
+    })
+    .catch(function(){
+      status.className = 'form-status err';
+      status.textContent = 'Connection problem — please reload.';
+      status.style.display = 'block';
+    });
+})();
+</script>
 </body>
 </html>
