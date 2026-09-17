@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete your profile — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="/api/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap" style="max-width:640px;">
+      <span class="eyebrow kicker">One last step</span>
+      <h1>Complete your profile.</h1>
+      <p style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft);">Before reaching the resource library, tell us who you are. Total hours are optional — everything else is required.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="max-width:640px;">
+      <div id="form-status" class="form-status" role="status"></div>
+      <form id="profile-form" class="profile-form">
+        <div class="admin-form" style="margin-bottom:0;">
+          <div class="row2">
+            <div class="field">
+              <label for="first_name">First name</label>
+              <input type="text" id="first_name" name="first_name" required autocomplete="given-name">
+            </div>
+            <div class="field">
+              <label for="last_name">Last name</label>
+              <input type="text" id="last_name" name="last_name" required autocomplete="family-name">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="birth_year">Year of birth</label>
+              <input type="number" id="birth_year" name="birth_year" required min="1930" max="2100" inputmode="numeric" placeholder="e.g. 1985">
+            </div>
+            <div class="field">
+              <label for="role">Role / rank</label>
+              <input type="text" id="role" name="role" required list="role-suggestions" placeholder="e.g. Captain, First Officer, Cadet">
+              <datalist id="role-suggestions">
+                <option value="Captain">
+                <option value="First Officer">
+                <option value="Second Officer">
+                <option value="Cadet">
+                <option value="Flight Engineer">
+                <option value="Dispatcher">
+                <option value="Operations">
+              </datalist>
+            </div>
+          </div>
+          <div class="field">
+            <label for="total_hours">Total flight hours <span style="font-weight:400; color:var(--grey);">(optional)</span></label>
+            <input type="number" id="total_hours" name="total_hours" min="0" step="1" inputmode="numeric" placeholder="e.g. 8400">
+          </div>
+        </div>
+        <button type="submit" class="btn" style="align-self:flex-start;">Save and continue</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var form = document.getElementById('profile-form');
+  var status = document.getElementById('form-status');
+  var params = new URLSearchParams(location.search);
+  var next = params.get('next') || 'risorse.html';
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    status.className = 'form-status';
+    status.textContent = '';
+
+    var hoursVal = document.getElementById('total_hours').value;
+    var payload = {
+      first_name: document.getElementById('first_name').value.trim(),
+      last_name: document.getElementById('last_name').value.trim(),
+      birth_year: Number(document.getElementById('birth_year').value),
+      role: document.getElementById('role').value.trim(),
+      total_hours: hoursVal === '' ? null : Number(hoursVal)
+    };
+
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+
+    fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+      .then(function(r){
+        if (r.ok && r.data.ok){
+          window.location.href = next;
+          return;
+        }
+        btn.disabled = false;
+        status.className = 'form-status err';
+        status.textContent = 'Could not save your profile — please check the fields above and try again.';
+      })
+      .catch(function(){
+        btn.disabled = false;
+        status.className = 'form-status err';
+        status.textContent = 'Connection problem — please try again.';
+      });
+  });
+})();
+</script>
+</body>
+</html>
