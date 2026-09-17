@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Article — GioAviation.aero</title>
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<!-- Markdown is stored raw in D1 and rendered here, in the reader's own
+     browser — the Worker never runs a Markdown/HTML parser, keeping it a
+     single dependency-free script. DOMPurify strips anything unexpected
+     before it reaches the page, as a second line of defence beyond "only
+     Gio writes articles". -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="articoli.html">Articles</a>
+      <a href="login.html" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap" style="max-width:760px;">
+      <span id="category" class="eyebrow kicker" style="display:none;"></span>
+      <h1 id="title">Loading…</h1>
+      <p id="meta" class="small" style="margin-top:10px; color:var(--grey); font-size:0.875rem;"></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="max-width:760px;">
+      <div id="status" class="form-status" role="status"></div>
+      <div id="body" class="article-body"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="articoli.html">Articles</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var slug = new URLSearchParams(location.search).get('slug');
+  var status = document.getElementById('status');
+  var titleEl = document.getElementById('title');
+  var catEl = document.getElementById('category');
+  var metaEl = document.getElementById('meta');
+  var bodyEl = document.getElementById('body');
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  if (!slug){
+    titleEl.textContent = 'Article not found';
+    status.className = 'form-status err';
+    status.textContent = 'No article specified.';
+    status.style.display = 'block';
+    return;
+  }
+
+  fetch('/api/articles?slug=' + encodeURIComponent(slug))
+    .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+    .then(function(r){
+      if (!r.ok || !r.data.ok){
+        titleEl.textContent = 'Article not found';
+        status.className = 'form-status err';
+        status.textContent = 'This article does not exist or is not published.';
+        status.style.display = 'block';
+        return;
+      }
+      var a = r.data.article;
+      document.getElementById('page-title').textContent = a.title + ' — GioAviation.aero';
+      titleEl.textContent = a.title;
+      if (a.category_name){
+        catEl.textContent = a.category_name;
+        catEl.style.display = 'inline-block';
+      }
+      if (a.published_at){
+        var d = new Date(a.published_at);
+        metaEl.textContent = isNaN(d) ? '' : d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+      }
+      var rawHtml = (window.marked ? marked.parse(a.body_markdown || '') : esc(a.body_markdown || ''));
+      bodyEl.innerHTML = window.DOMPurify ? DOMPurify.sanitize(rawHtml) : rawHtml;
+    })
+    .catch(function(){
+      titleEl.textContent = 'Could not load this article';
+      status.className = 'form-status err';
+      status.textContent = 'Connection problem — please reload.';
+      status.style.display = 'block';
+    });
+})();
+</script>
+</body>
+</html>
