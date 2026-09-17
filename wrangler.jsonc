@@ -15,6 +15,12 @@
       "database_id": "e676af6b-872c-4b77-9cc3-4536daf12854"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "DOCS",
+      "bucket_name": "gioaviation-documents"
+    }
+  ],
   "vars": {
     "RESEND_FROM": "GioAviation.com <access@gioaviation.com>",
     "ADMIN_NOTIFY_EMAIL": "admin@gioaviation.com"
