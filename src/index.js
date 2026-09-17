@@ -270,18 +270,18 @@ async function sendCredentialsEmail(env, { email, fullName, password }) {
   const loginUrl = "https://gioaviation.aero/login.html";
 
   const html = `
-    <p>Ciao ${escapeHtml(fullName)},</p>
-    <p>Il tuo accesso a GioAviation.aero &egrave; stato approvato. Ecco le tue credenziali:</p>
+    <p>Hello ${escapeHtml(fullName)},</p>
+    <p>Your access to GioAviation.aero has been approved. Here are your credentials:</p>
     <p><strong>Email:</strong> ${escapeHtml(email)}<br>
     <strong>Password:</strong> ${escapeHtml(password)}</p>
-    <p>Accedi qui: <a href="${loginUrl}">${loginUrl}</a></p>
-    <p>Ti consigliamo di conservare questa password in un posto sicuro; non viene mostrata di nuovo.</p>
+    <p>Log in here: <a href="${loginUrl}">${loginUrl}</a></p>
+    <p>Please keep this password somewhere safe; it will not be shown again.</p>
     <p>&mdash; GioAviation.aero</p>
   `;
 
   await sendEmail(env, {
     to: email,
-    subject: "Il tuo accesso a GioAviation.aero è stato approvato",
+    subject: "Your GioAviation.aero access has been approved",
     html,
   });
 }
@@ -294,18 +294,18 @@ async function notifyAdminOfNewRequest(env, { email, fullName, company, note }) 
   if (!env.ADMIN_NOTIFY_EMAIL) return;
 
   const html = `
-    <p>Nuova richiesta di accesso su GioAviation.aero:</p>
-    <p><strong>Nome:</strong> ${escapeHtml(fullName)}<br>
+    <p>New access request on GioAviation.aero:</p>
+    <p><strong>Name:</strong> ${escapeHtml(fullName)}<br>
     <strong>Email:</strong> ${escapeHtml(email)}<br>
-    <strong>Compagnia:</strong> ${escapeHtml(company || "—")}<br>
-    <strong>Nota:</strong> ${escapeHtml(note || "—")}</p>
-    <p>Approva o rifiuta da <a href="https://gioaviation.aero/admin.html">admin.html</a>.</p>
+    <strong>Company:</strong> ${escapeHtml(company || "—")}<br>
+    <strong>Note:</strong> ${escapeHtml(note || "—")}</p>
+    <p>Approve or reject from <a href="https://gioaviation.aero/admin.html">admin.html</a>.</p>
   `;
 
   try {
     await sendEmail(env, {
       to: env.ADMIN_NOTIFY_EMAIL,
-      subject: `Nuova richiesta di accesso — ${fullName}`,
+      subject: `New access request — ${fullName}`,
       html,
     });
   } catch (e) {
