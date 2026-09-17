@@ -36,6 +36,12 @@
     <div class="wrap">
       <span class="eyebrow kicker">Admin</span>
       <h1>Access requests</h1>
+      <nav class="admin-tabs">
+        <a href="admin.html" aria-current="page">Access requests</a>
+        <a href="admin-documenti.html">Documents</a>
+        <a href="admin-articoli.html">Articles</a>
+        <a href="admin-categorie.html">Categories</a>
+      </nav>
     </div>
   </section>
 
@@ -103,13 +109,23 @@
         '<button type="button" class="delete" data-id="' + p.id + '" data-action="delete" data-name="' + esc(p.full_name) + '">Delete</button>' +
         '</div>';
     } else {
-      actions = '<div class="actions"><span class="pill ' + p.status + '">' + esc(p.status) + '</span>' +
+      var resend = '';
+      if (p.status === 'approved' && !p.activated){
+        resend = '<button type="button" class="delete" data-id="' + p.id + '" data-action="resend-activation">Resend link</button>';
+      }
+      actions = '<div class="actions"><span class="pill ' + p.status + '">' + esc(p.status) + '</span>' + resend +
         '<button type="button" class="delete" data-id="' + p.id + '" data-action="delete" data-name="' + esc(p.full_name) + '">Delete</button></div>';
+    }
+    var statusNote = '';
+    if (p.status === 'approved'){
+      statusNote = p.activated
+        ? (p.profile_completed ? 'Active' : 'Password set, profile incomplete')
+        : 'Awaiting activation';
     }
     return '<div class="admin-row">' +
       '<div><div class="name">' + esc(p.full_name) + '</div><div class="muted">' + esc(p.email) + '</div></div>' +
       '<div>' + esc(p.company || '—') + '</div>' +
-      '<div class="muted">' + esc((p.created_at || '').slice(0,10)) + '</div>' +
+      '<div class="muted">' + esc((p.created_at || '').slice(0,10)) + (statusNote ? '<br>' + esc(statusNote) : '') + '</div>' +
       '<div class="muted">' + esc(p.note || '') + '</div>' +
       actions +
       '</div>';
@@ -171,8 +187,14 @@
         if (data.ok && action === 'approve'){
           listStatus.className = data.email_sent ? 'form-status ok' : 'form-status err';
           listStatus.textContent = data.email_sent
-            ? 'Approved — credentials emailed.'
+            ? 'Approved — activation link emailed.'
             : 'Approved, but the email could not be sent (' + (data.email_error || 'unknown error') + '). Configure RESEND_API_KEY / RESEND_FROM.';
+        }
+        if (data.ok && action === 'resend-activation'){
+          listStatus.className = data.email_sent ? 'form-status ok' : 'form-status err';
+          listStatus.textContent = data.email_sent
+            ? 'Activation link resent.'
+            : 'Could not resend the email (' + (data.email_error || 'unknown error') + ').';
         }
         load();
       })
