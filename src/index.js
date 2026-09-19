@@ -298,7 +298,7 @@ async function notifyAdminOfNewRequest(env, { email, fullName, company, note }) 
     <p><strong>Name:</strong> ${escapeHtml(fullName)}<br>
     <strong>Email:</strong> ${escapeHtml(email)}<br>
     <strong>Company:</strong> ${escapeHtml(company || "—")}<br>
-    <strong>Note:</strong> ${escapeHtml(note || "—")}</p>
+    <strong>Details:</strong><br>${escapeHtml(note || "—").replace(/\n/g, "<br>")}</p>
     <p>Approve or reject from <a href="https://gioaviation.aero/admin.html">admin.html</a>.</p>
   `;
 
