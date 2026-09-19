@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -37,30 +37,55 @@
     <div class="wrap">
       <span class="eyebrow kicker">Access is by approval</span>
       <h1>Request access to the resource library.</h1>
-      <p style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft); max-width:56ch;">Every request is reviewed individually — there's no automatic sign-up. If approved, your login credentials arrive by email.</p>
+      <p style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft); max-width:56ch;">Every request is reviewed personally, with a reply within 48 hours. If approved, your login credentials arrive by email. Pilots, instructors, operators, cadets and student pilots are all welcome.</p>
     </div>
   </section>
 
   <section>
     <div class="wrap" style="max-width:640px;">
-      <form id="access-form" class="contact-form">
-        <div class="field">
-          <label for="full_name">Full name</label>
-          <input type="text" id="full_name" name="full_name" required autocomplete="name">
+      <form id="access-form" class="contact-form" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label for="full_name">Full name</label>
+            <input type="text" id="full_name" name="full_name" required autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role" required>
+              <option value="">Select your role</option>
+              <option>Captain</option>
+              <option>First Officer</option>
+              <option>Second Officer</option>
+              <option>Instructor / Examiner</option>
+              <option>Operations or training staff</option>
+              <option>Cadet</option>
+              <option>Student pilot</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="aircraft">Aircraft type(s) or course</label>
+            <input type="text" id="aircraft" name="aircraft" required placeholder="e.g. B747-400, or ATPL integrated">
+          </div>
         </div>
         <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email">
-        </div>
-        <div class="field">
-          <label for="company">Airline / company</label>
+          <label for="company">Operator or school <span class="opt">(optional)</span></label>
           <input type="text" id="company" name="company" autocomplete="organization">
         </div>
         <div class="field">
-          <label for="note">Role / anything relevant (optional)</label>
-          <textarea id="note" name="note" placeholder="e.g. First Officer B747-400, type-rating candidate, …"></textarea>
+          <label for="use">How will you use the material?</label>
+          <textarea id="use" name="use" required></textarea>
+          <span class="help">Two or three lines are enough.</span>
         </div>
-        <button type="submit" class="btn" style="align-self:flex-start;">Submit request</button>
+        <label class="check" for="terms"><input type="checkbox" id="terms" required><span>I understand this material is for training and reference only and is not approved operational data.</span></label>
+        <label class="check" for="consent"><input type="checkbox" id="consent" required><span>I agree that my details are stored to review this request and manage my access.</span></label>
+        <button type="submit" class="btn" style="align-self:flex-start;">Send request</button>
         <div id="form-status" class="form-status" role="status"></div>
       </form>
     </div>
@@ -97,11 +122,29 @@
     e.preventDefault();
     status.className = 'form-status';
     status.textContent = '';
+    var v = function(id){ return document.getElementById(id).value.trim(); };
+    var missing = [];
+    if (!v('full_name')) missing.push('full name');
+    if (!v('email')) missing.push('email');
+    if (!v('role')) missing.push('role');
+    if (!v('aircraft')) missing.push('aircraft type or course');
+    if (!v('use')) missing.push('how you will use the material');
+    if (missing.length){
+      status.className = 'form-status err';
+      status.textContent = 'Please complete: ' + missing.join(', ') + '.';
+      return;
+    }
+    if (!document.getElementById('terms').checked || !document.getElementById('consent').checked){
+      status.className = 'form-status err';
+      status.textContent = 'Please tick both boxes to send your request.';
+      return;
+    }
+    // Stored in the existing "note" column so no database change is needed.
     var payload = {
-      full_name: document.getElementById('full_name').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      company: document.getElementById('company').value.trim(),
-      note: document.getElementById('note').value.trim()
+      full_name: v('full_name'),
+      email: v('email'),
+      company: v('company'),
+      note: 'Role: ' + v('role') + '\nAircraft / course: ' + v('aircraft') + '\nIntended use: ' + v('use')
     };
     fetch('/api/request-access', {
       method: 'POST',
@@ -112,7 +155,7 @@
       .then(function(result){
         if (result.ok && result.data.ok){
           status.className = 'form-status ok';
-          status.textContent = 'Request submitted. You will receive an email if approved.';
+          status.textContent = 'Request received. You will hear back within 48 hours; if approved, your credentials arrive by email.';
           form.reset();
         } else {
           var code = result.data && result.data.error;
@@ -122,7 +165,7 @@
       })
       .catch(function(){
         status.className = 'form-status err';
-        status.textContent = 'Connection problem — please try again in a moment.';
+        status.textContent = 'Connection problem. Please try again in a moment.';
       });
   });
 })();

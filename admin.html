@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -67,13 +67,13 @@
 <style>
   .admin-row{ display:grid; grid-template-columns: 1.4fr 1fr 0.9fr 1.4fr 0.9fr; gap:14px; align-items:center; padding:16px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:var(--paper); }
   .admin-row .muted{ color:var(--grey); font-size:0.8125rem; }
-  .admin-row .name{ font-family:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; font-weight:700; color:var(--navy); }
+  .admin-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
   .admin-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
-  .admin-row .actions button{ font-family:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; font-weight:700; font-size:0.8125rem; padding:8px 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
+  .admin-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:8px 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
   .admin-row .actions button.approve{ background:var(--gold); color:var(--on-gold); border-color:var(--gold); }
   .admin-row .actions button.reject{ color:var(--danger); border-color:#F3CFC9; }
   .admin-row .actions button.delete{ color:var(--grey); border-color:var(--line); }
-  .pill{ display:inline-block; font-family:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; font-weight:700; font-size:0.6875rem; letter-spacing:0.04em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
+  .pill{ display:inline-block; font-family:var(--font); font-weight:700; font-size:0.6875rem; letter-spacing:0.04em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
   .pill.pending{ background:#F8EBDA; color:var(--caution); }
   .pill.approved{ background:#E6F4EC; color:var(--success); }
   .pill.rejected{ background:#FBE9E7; color:var(--danger); }
@@ -110,7 +110,7 @@
       '<div><div class="name">' + esc(p.full_name) + '</div><div class="muted">' + esc(p.email) + '</div></div>' +
       '<div>' + esc(p.company || '—') + '</div>' +
       '<div class="muted">' + esc((p.created_at || '').slice(0,10)) + '</div>' +
-      '<div class="muted">' + esc(p.note || '') + '</div>' +
+      '<div class="muted" style="white-space:pre-line">' + esc(p.note || '') + '</div>' +
       actions +
       '</div>';
   }

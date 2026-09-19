@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GioAviation.aero — Operational Reference for Professional Aviation</title>
-<meta name="description" content="Reference material for aviation professionals: 747-400 mental maps, route documentation, and technical bulletins, sourced from active line operations. Access is by approval.">
+<title>GioAviation.aero — Boeing 747-400 Study and Reference Material</title>
+<meta name="description" content="Boeing 747-400 system mental maps and reference material prepared by a Line Training Captain, for flight crew, operators, cadets and student pilots. Access is reviewed personally.">
 <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
 <link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
 <link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
@@ -13,131 +13,140 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<header class="site">
+<header class="site over-hero" id="site-header">
   <div class="wrap">
     <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
       <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
       <span class="name">GioAviation<b>.aero</b></span>
     </a>
-    <nav class="primary">
-      <a href="index.html" aria-current="page">Home</a>
-      <a href="richiedi-accesso.html">Request access</a>
-      <a href="login.html" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    <nav class="primary" aria-label="Main">
+      <a class="nav-anchor" href="#library">Library</a>
+      <a class="nav-anchor" href="#access">Access</a>
+      <a class="nav-anchor" href="#about">About</a>
+      <a href="login.html" class="btn ghost sm">Log in</a>
+      <a href="richiedi-accesso.html" class="btn sm">Request access</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <span class="eyebrow">Operational Reference · B747-400 Cargo</span>
-        <h1>Clear, current reference material for <span class="accent">professional aviation.</span></h1>
-        <p class="lead">Route documentation, technical mental maps, and procedural references prepared for flight crew, operators, and candidates — drawn from active line operations.</p>
-        <div class="cta-row">
-          <a class="btn" href="richiedi-accesso.html">Request access</a>
-          <a class="btn ghost" href="login.html">Log in</a>
-        </div>
-        <div class="hero-badge">
-          <strong>Fleet Captain &amp; Line Training Captain</strong> — Boeing 747-400, worldwide cargo operations
-        </div>
-      </div>
-
-      <div class="hero-art">
-        <div class="row">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 16l20-7-7 20-3-8-8-3-2-2z" fill="#fff"/></svg></span>
-          <span class="tx"><strong>Mental Map · 747-400</strong><span>Hydraulic system reference</span></span>
-        </div>
-        <div class="row">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19h16M6 19V9l6-5 6 5v10" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <span class="tx"><strong>Mental Map · 747-400</strong><span>Electrical system reference</span></span>
-        </div>
-        <div class="row">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <span class="tx"><strong>Mental Map · 747-400</strong><span>Flight control system reference</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="access" class="alt">
-    <div class="wrap standard-grid">
-      <div>
-        <span class="eyebrow">Access</span>
-        <h2>Approved access only.</h2>
-        <p style="color:var(--ink-soft); font-size:1rem; max-width:42ch; margin-top:12px;">The resource library, technical mental maps, and background pages are reserved for pilots whose access has been reviewed and approved individually. Nothing is published openly on this site.</p>
-      </div>
-      <div class="standard-points">
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#1B6FB0" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <div><h4>1. Request access</h4><p>Submit your name, email, and airline/role. Takes a minute.</p></div>
-        </div>
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#1B6FB0" stroke-width="2"/></svg></span>
-          <div><h4>2. Review</h4><p>Each request is reviewed individually before approval — no automatic sign-up.</p></div>
-        </div>
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1B6FB0" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <div><h4>3. Credentials by email</h4><p>Once approved, your login credentials arrive by email and you can sign in.</p></div>
-        </div>
-      </div>
-      <div class="cta-row" style="margin-top:8px;">
-        <a class="btn" href="richiedi-accesso.html">Request access</a>
-        <a class="btn ghost" href="login.html">Already approved? Log in</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="paths">
+  <section class="hero" id="top">
     <div class="wrap">
-      <div class="section-head">
-        <div><span class="eyebrow">Coming soon</span><h2>Built for three audiences</h2></div>
+      <span class="label" style="color:var(--sky-on-dark)">Technical reference for professional pilots</span>
+      <h1>Boeing 747-400 study and reference material</h1>
+      <p class="lead">System mental maps, technical bulletins and route notes prepared by a 747-400 Line Training Captain. For flight crew, operators and pilots in training.</p>
+      <div class="cta-row">
+        <a class="btn" href="richiedi-accesso.html">Request access</a>
+        <a class="btn ghost" href="login.html">Log in</a>
       </div>
-      <div class="path-grid">
-        <div class="path-card">
-          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 16l20-7-7 20-3-8-8-3-2-2z" fill="#1B6FB0"/></svg></span>
-          <h3>Flight Crew</h3>
-          <p>Mental maps, technical bulletins, route and type references built for recall on the line.</p>
-        </div>
-        <div class="path-card">
-          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#1B6FB0" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <h3>Operators &amp; Airlines</h3>
-          <p>Documentation standards, briefing materials, and a direct line for consulting work.</p>
-        </div>
-        <div class="path-card">
-          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#1B6FB0" stroke-width="2"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <h3>Candidates &amp; Cadets</h3>
-          <p>Career pathway notes, type-rating preparation, and a clear study structure.</p>
-        </div>
+      <p class="hero-sla">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.5 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Every request is reviewed personally. Reply within 48 hours.
+      </p>
+    </div>
+    <div id="hero-end" aria-hidden="true"></div>
+  </section>
+
+  <section class="block" id="library">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">The library</span>
+        <h2>What approved members can access</h2>
+        <p>A preview of the library. Documents open for approved members after login.</p>
+      </div>
+      <div class="lib">
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 29</span><span class="chip grey">Mental map</span></div>
+          <h3>Hydraulic power</h3>
+          <p>System architecture, pump logic and the failures that matter, on a single reference.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Members</span></div>
+        </a>
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 24</span><span class="chip grey">Mental map</span></div>
+          <h3>Electrical power</h3>
+          <p>Sources, buses and transfer logic organised for recall on the line.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Members</span></div>
+        </a>
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 27</span><span class="chip grey">Mental map</span></div>
+          <h3>Flight controls</h3>
+          <p>Control surfaces, their power sources and the relevant non-normal cases.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Members</span></div>
+        </a>
+      </div>
+      <div class="sec-foot">
+        <span>Technical bulletins and route notes are in preparation.</span>
+        <a class="text-link" href="risorse.html">Open the library →</a>
       </div>
     </div>
   </section>
 
-  <section id="standard" class="alt">
-    <div class="wrap standard-grid">
-      <div>
-        <span class="eyebrow">Why trust a document here</span>
-        <h2>One standard, no exceptions.</h2>
-        <p style="color:var(--ink-soft); font-size:1rem; max-width:38ch; margin-top:12px;">No content is published without a traceable source and a named review step.</p>
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">Who it is for</span>
+        <h2>Written for people who operate the aircraft</h2>
       </div>
-      <div class="standard-points">
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#1B6FB0" stroke-width="2"/></svg></span>
-          <div><h4>Zero fabrication</h4><p>No figure, limitation, or procedure is stated without a verifiable source document behind it.</p></div>
+      <div class="aud">
+        <div><h3>Flight crew</h3><p>Captains, first officers and instructors preparing for checks, upgrades, type conversion or briefings.</p></div>
+        <div><h3>Operators and airlines</h3><p>Training and operations staff looking for structured reference and briefing material.</p></div>
+        <div><h3>Cadets and student pilots</h3><p>A clear view of how large-aircraft systems are organised, and a structure for study.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="access">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">How access works</span>
+        <h2>Three steps, reviewed by the author</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="n">STEP 1</span><h3>Submit a request</h3><p>Tell us who you are, what you fly or study, and how you will use the material.</p></div>
+        <div class="step"><span class="n">STEP 2</span><h3>Personal review</h3><p>Each request is read individually. Pilots, instructors, operators, cadets and student pilots are all welcome.</p></div>
+        <div class="step"><span class="n">STEP 3</span><h3>Credentials by email</h3><p>Within 48 hours of your request, approved members receive their login credentials by email.</p></div>
+      </div>
+      <p class="data-note"><strong>Your data:</strong> we ask only for what the review needs. No licence numbers and no copies of documents. Your details are used only to review your request and manage your access.</p>
+    </div>
+  </section>
+
+  <section class="block" id="about">
+    <div class="wrap">
+      <div class="author">
+        <div class="author-mark" aria-hidden="true">
+          <img src="assets/img/logo-mark-dark.svg" alt="" width="56" height="56">
         </div>
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19h16M6 19V9l6-5 6 5v10" stroke="#1B6FB0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <div><h4>Source attribution</h4><p>Every excerpt is traced to the manual, revision, and section it was drawn from.</p></div>
+        <div>
+          <div class="sec-head" style="margin-bottom:12px">
+            <span class="label" style="color:var(--sky)">About the author</span>
+            <h2>Prepared on the line</h2>
+          </div>
+          <p>The material is written by a Boeing 747-400 Fleet Captain and Line Training Captain operating worldwide cargo flights.</p>
+          <div class="creds"><span class="chip grey">Boeing 747-400 Captain</span><span class="chip grey">Line Training Captain</span><span class="chip grey">Oxford Aviation College</span></div>
         </div>
-        <div class="standard-point">
-          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1B6FB0" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1B6FB0" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <div><h4>Dated revision</h4><p>Documents carry a visible revision date and are retired when the source changes.</p></div>
-        </div>
+      </div>
+      <div class="standard-list" style="margin-top:48px">
+        <div><h3>Zero fabrication</h3><p>No figure, limitation or procedure is stated without a verifiable source document behind it.</p></div>
+        <div><h3>Source attribution</h3><p>Every reference is traced to the manual, revision and section it was drawn from.</p></div>
+        <div><h3>Dated revision</h3><p>Documents carry a visible revision date and are retired when the source changes.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="wrap">
+      <div>
+        <h2>Request member access</h2>
+        <p>Reviewed personally. Reply within 48 hours.</p>
+      </div>
+      <div class="cta-row">
+        <a class="btn" href="richiedi-accesso.html">Request access</a>
+        <a class="btn ghost" href="login.html">Log in</a>
       </div>
     </div>
   </section>
@@ -149,12 +158,27 @@
       <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
       <span class="fine">© 2026 GioAviation.aero</span>
     </div>
-    <nav>
+    <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="richiedi-accesso.html">Request access</a>
       <a href="login.html">Log in</a>
     </nav>
+    <p class="disclaimer">Study and reference material for training purposes only. It is not approved operational data. Always refer to your operator's approved manuals and procedures. GioAviation.aero is independent and not affiliated with The Boeing Company or any operator.</p>
   </div>
 </footer>
+
+<script>
+(function(){
+  var hdr = document.getElementById('site-header');
+  var end = document.getElementById('hero-end');
+  if (!hdr || !end || !('IntersectionObserver' in window)) return;
+  new IntersectionObserver(function(entries){
+    var e = entries[0];
+    var past = !e.isIntersecting && e.boundingClientRect.top < hdr.offsetHeight;
+    hdr.classList.toggle('is-scrolled', past);
+    hdr.classList.toggle('over-hero', !past);
+  }, { rootMargin: '-72px 0px 0px 0px' }).observe(end);
+})();
+</script>
 </body>
 </html>
