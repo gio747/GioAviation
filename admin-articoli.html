@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Articles — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="/api/admin/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Admin</span>
+      <h1>Articles</h1>
+      <nav class="admin-tabs">
+        <a href="admin.html">Access requests</a>
+        <a href="admin-documenti.html">Documents</a>
+        <a href="admin-articoli.html" aria-current="page">Articles</a>
+        <a href="admin-categorie.html">Categories</a>
+      </nav>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div id="form-status" class="form-status" role="status"></div>
+
+      <form id="art-form" class="admin-form">
+        <input type="hidden" id="art-id" value="">
+        <div class="field">
+          <label for="art-title">Title</label>
+          <input type="text" id="art-title" required>
+        </div>
+        <div class="row3">
+          <div class="field">
+            <label for="art-slug">URL slug <span style="font-weight:400; color:var(--grey);">(leave blank to auto-generate)</span></label>
+            <input type="text" id="art-slug" placeholder="e.g. reading-the-hydraulic-schematic">
+          </div>
+          <div class="field">
+            <label for="art-category">Category</label>
+            <select id="art-category"><option value="">— none —</option></select>
+          </div>
+          <div class="field">
+            <label for="art-status">Status</label>
+            <select id="art-status">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="art-excerpt">Excerpt <span style="font-weight:400; color:var(--grey);">(shown in the article list)</span></label>
+          <input type="text" id="art-excerpt">
+        </div>
+        <div class="field">
+          <label for="art-body">Body (Markdown)</label>
+          <textarea id="art-body" class="markdown" required placeholder="## Heading&#10;&#10;Text goes here. **Bold**, _italic_, [links](https://...), lists, and &#96;code&#96; all work."></textarea>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn">Save article</button>
+          <button type="button" id="art-cancel" class="btn ghost" hidden>Cancel edit</button>
+          <button type="button" id="art-preview-toggle" class="btn ghost">Preview</button>
+        </div>
+        <div id="art-preview" class="article-body" style="display:none; border-top:1px solid var(--line); padding-top:20px; margin-top:6px;"></div>
+      </form>
+
+      <h2 style="font-size:1.25rem; margin-bottom:16px;">All articles</h2>
+      <div id="art-list"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav><a href="index.html">Home</a></nav>
+  </div>
+</footer>
+
+<style>
+  .art-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:center; padding:14px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; background:var(--paper); }
+  .art-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
+  .art-row .muted{ color:var(--grey); font-size:0.8125rem; }
+  .art-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .art-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
+  @media (max-width:860px){ .art-row{ grid-template-columns:1fr; } .art-row .actions{ justify-content:flex-start; } }
+</style>
+
+<script>
+(function(){
+  var formStatus = document.getElementById('form-status');
+  var form = document.getElementById('art-form');
+  var idField = document.getElementById('art-id');
+  var titleField = document.getElementById('art-title');
+  var slugField = document.getElementById('art-slug');
+  var categoryField = document.getElementById('art-category');
+  var statusField = document.getElementById('art-status');
+  var excerptField = document.getElementById('art-excerpt');
+  var bodyField = document.getElementById('art-body');
+  var cancelBtn = document.getElementById('art-cancel');
+  var previewToggle = document.getElementById('art-preview-toggle');
+  var previewEl = document.getElementById('art-preview');
+  var list = document.getElementById('art-list');
+  var articles = [];
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function loadCategories(){
+    return fetch('/api/admin/categories').then(function(res){ return res.json(); }).then(function(data){
+      var cats = (data.categories || []).filter(function(c){ return c.kind === 'article'; });
+      categoryField.innerHTML = '<option value="">— none —</option>' +
+        cats.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+    });
+  }
+
+  function rowHtml(a){
+    return '<div class="art-row">' +
+      '<div><div class="name">' + esc(a.title) + '</div><div class="muted">/' + esc(a.slug) + '</div></div>' +
+      '<div class="muted">' + esc(a.category_name || '—') + '</div>' +
+      '<div><span class="pill ' + a.status + '">' + esc(a.status) + '</span></div>' +
+      '<div class="actions">' +
+        '<button type="button" data-action="edit" data-id="' + a.id + '">Edit</button>' +
+        (a.status === 'published' ? '<button type="button" data-action="view" data-slug="' + esc(a.slug) + '">View</button>' : '') +
+        '<button type="button" data-action="delete" data-id="' + a.id + '" data-name="' + esc(a.title) + '">Delete</button>' +
+      '</div></div>';
+  }
+
+  function loadArticles(){
+    fetch('/api/admin/articles')
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(data){
+        if (!data) return;
+        articles = data.articles || [];
+        list.innerHTML = articles.length ? articles.map(rowHtml).join('') : '<p style="color:var(--grey);">No articles yet.</p>';
+      });
+  }
+
+  function resetForm(){
+    idField.value = '';
+    form.reset();
+    previewEl.style.display = 'none';
+    cancelBtn.hidden = true;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    formStatus.className = 'form-status';
+    formStatus.textContent = '';
+    var payload = {
+      id: idField.value || undefined,
+      title: titleField.value.trim(),
+      slug: slugField.value.trim(),
+      category_id: categoryField.value || null,
+      status: statusField.value,
+      excerpt: excerptField.value.trim(),
+      body_markdown: bodyField.value
+    };
+    fetch('/api/admin/articles/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.ok){
+          formStatus.className = 'form-status err';
+          formStatus.textContent = data.error === 'slug_taken' ? 'That URL slug is already used by another article.' : 'Could not save the article.';
+          return;
+        }
+        formStatus.className = 'form-status ok';
+        formStatus.textContent = 'Saved.';
+        resetForm();
+        loadArticles();
+      })
+      .catch(function(){
+        formStatus.className = 'form-status err';
+        formStatus.textContent = 'Connection problem — please try again.';
+      });
+  });
+
+  cancelBtn.addEventListener('click', resetForm);
+
+  previewToggle.addEventListener('click', function(){
+    if (previewEl.style.display === 'none'){
+      var raw = window.marked ? marked.parse(bodyField.value || '') : esc(bodyField.value || '');
+      previewEl.innerHTML = window.DOMPurify ? DOMPurify.sanitize(raw) : raw;
+      previewEl.style.display = 'block';
+      previewToggle.textContent = 'Hide preview';
+    } else {
+      previewEl.style.display = 'none';
+      previewToggle.textContent = 'Preview';
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'view'){
+      window.open('articolo.html?slug=' + encodeURIComponent(btn.dataset.slug), '_blank');
+      return;
+    }
+    var id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'edit'){
+      var a = articles.find(function(x){ return x.id === id; });
+      if (!a) return;
+      idField.value = a.id;
+      titleField.value = a.title;
+      slugField.value = a.slug;
+      categoryField.value = a.category_id || '';
+      statusField.value = a.status;
+      excerptField.value = a.excerpt || '';
+      bodyField.value = a.body_markdown || '';
+      cancelBtn.hidden = false;
+      window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
+    }
+    if (btn.dataset.action === 'delete'){
+      if (!window.confirm('Delete "' + (btn.dataset.name || 'this article') + '" permanently?')) return;
+      fetch('/api/admin/articles/delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
+      }).then(function(){ loadArticles(); });
+    }
+  });
+
+  loadCategories().then(loadArticles);
+})();
+</script>
+</body>
+</html>

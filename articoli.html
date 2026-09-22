@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Articles — GioAviation.aero</title>
+<meta name="description" content="Notes and write-ups on 747-400 operations, from active line experience.">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="articoli.html" aria-current="page">Articles</a>
+      <a href="richiedi-accesso.html">Request access</a>
+      <a href="login.html" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Open to everyone</span>
+      <h1>Articles.</h1>
+      <p style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft); max-width:56ch;">Notes on 747-400 operations, written from the line. No login required.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div id="status" class="form-status" role="status"></div>
+      <div id="grid" class="article-grid"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="articoli.html">Articles</a>
+      <a href="richiedi-accesso.html">Request access</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var status = document.getElementById('status');
+  var grid = document.getElementById('grid');
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatDate(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+  }
+
+  fetch('/api/articles')
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if (!data.ok){ throw new Error('load_failed'); }
+      if (!data.articles.length){
+        status.textContent = 'No articles published yet — check back soon.';
+        status.className = 'form-status';
+        status.style.display = 'block';
+        return;
+      }
+      status.style.display = 'none';
+      grid.innerHTML = data.articles.map(function(a){
+        return '<a class="article-card" href="articolo.html?slug=' + encodeURIComponent(a.slug) + '">' +
+          (a.category_name ? '<span class="badge-cat" style="align-self:flex-start;">' + esc(a.category_name) + '</span>' : '') +
+          '<h3>' + esc(a.title) + '</h3>' +
+          (a.excerpt ? '<p>' + esc(a.excerpt) + '</p>' : '') +
+          '<span class="meta">' + formatDate(a.published_at) + '</span>' +
+          '</a>';
+      }).join('');
+    })
+    .catch(function(){
+      status.className = 'form-status err';
+      status.textContent = 'Could not load articles — please reload.';
+      status.style.display = 'block';
+    });
+})();
+</script>
+</body>
+</html>

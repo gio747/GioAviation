@@ -15,6 +15,67 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<style>
+  /* Resource library layout — scoped to this page (lib-*), style.css untouched. */
+  .lib{ display:grid; grid-template-columns:260px minmax(0,1fr); gap:32px; align-items:start; }
+  .lib[hidden]{ display:none; }
+  .lib > *{ min-width:0; }
+  .lib-side{ position:sticky; top:24px; display:flex; flex-direction:column; gap:14px; }
+
+  .lib-search{ position:relative; }
+  .lib-search svg{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--grey); pointer-events:none; }
+  .lib-search input{ width:100%; box-sizing:border-box; font:inherit; font-size:0.9375rem; color:var(--ink); background:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:11px 36px 11px 40px; }
+  .lib-search input:focus{ outline:none; border-color:var(--sky); box-shadow:0 0 0 3px rgba(27,111,176,.15); }
+  .lib-search input::-webkit-search-cancel-button{ display:none; }
+  .lib-search .clear{ position:absolute; right:8px; top:50%; transform:translateY(-50%); border:0; background:transparent; color:var(--grey); cursor:pointer; font-size:1.1rem; line-height:1; padding:6px; border-radius:8px; display:none; }
+  .lib-search .clear:hover{ color:var(--ink); background:var(--tint); }
+  .lib-search.has-value .clear{ display:block; }
+
+  .lib-nav{ background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:8px; }
+  .lib-nav .label{ font-family:var(--font); font-weight:700; font-size:0.6875rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey); padding:10px 12px 6px; }
+  .lib-nav ul{ list-style:none; margin:0; padding:0; }
+  .lib-nav a{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; color:var(--ink-soft); text-decoration:none; font-weight:500; font-size:0.9375rem; }
+  .lib-nav a:hover{ background:var(--tint); color:var(--navy); }
+  .lib-nav a:focus-visible{ outline:2px solid var(--focus); outline-offset:1px; }
+  .lib-nav a[aria-current="true"]{ background:var(--navy); color:#fff; }
+  .lib-nav .count{ font-family:var(--font); font-weight:700; font-size:0.75rem; min-width:26px; text-align:center; padding:2px 8px; border-radius:999px; background:var(--tint-strong); color:var(--navy); }
+  .lib-nav a[aria-current="true"] .count{ background:rgba(255,255,255,.16); color:#fff; }
+  .lib-nav .sep{ height:1px; background:var(--line); margin:6px 8px; }
+
+  .lib-head{ padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .lib-head h3{ font-size:1.375rem; }
+  .lib-head .sub{ color:var(--grey); font-size:0.875rem; margin-top:4px; }
+
+  .lib-list{ list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .doc{ display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:16px; align-items:center; background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:16px 18px; transition:border-color .15s, box-shadow .15s; }
+  .doc:hover{ border-color:#B9C8D8; box-shadow:0 4px 14px rgba(12,45,79,.06); }
+  .doc .ico{ width:44px; height:44px; border-radius:12px; background:var(--tint-strong); color:var(--navy); display:grid; place-items:center; font-family:var(--font); font-weight:800; font-size:0.625rem; letter-spacing:0.04em; }
+  .doc h4{ font-family:var(--font); font-size:1rem; font-weight:700; color:var(--navy); margin:0; }
+  .doc p{ font-size:0.9rem; color:var(--ink-soft); margin:4px 0 0; }
+  .doc .meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin-top:8px; font-size:0.8125rem; color:var(--grey); }
+  .doc .chip{ font-family:var(--font); font-weight:700; font-size:0.6875rem; letter-spacing:0.04em; text-transform:uppercase; padding:3px 9px; border-radius:999px; }
+  .doc .chip.rev{ background:#E6F4EC; color:var(--success); }
+  .doc .chip.cat{ background:var(--tint); color:var(--sky); }
+  .doc .btn{ white-space:nowrap; }
+  .doc mark{ background:#FBE7B5; color:inherit; border-radius:3px; padding:0 1px; }
+
+  .lib-empty{ text-align:center; padding:48px 20px; color:var(--grey); background:var(--paper); border:1px dashed var(--line); border-radius:16px; }
+  .lib-empty strong{ display:block; color:var(--navy); font-family:var(--font); margin-bottom:6px; }
+  .lib-empty button{ margin-top:14px; }
+
+  @media (max-width: 860px){
+    .lib{ grid-template-columns:1fr; gap:18px; }
+    .lib-side{ position:static; }
+    .lib-nav{ padding:0; border:0; background:transparent; }
+    .lib-nav .label, .lib-nav .sep{ display:none; }
+    .lib-nav ul{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+    .lib-nav li{ flex:0 0 auto; }
+    .lib-nav a{ background:var(--paper); border:1px solid var(--line); white-space:nowrap; padding:8px 12px; }
+    .doc{ grid-template-columns:40px minmax(0,1fr); }
+    .doc .ico{ width:40px; height:40px; }
+    .doc .btn{ grid-column:1 / -1; justify-self:stretch; text-align:center; }
+  }
+</style>
 </head>
 <body>
 
@@ -27,6 +88,7 @@
     <nav class="primary">
       <a href="index.html">Home</a>
       <a href="risorse.html" aria-current="page">Resources</a>
+      <a href="articoli.html">Articles</a>
       <a href="credenziali.html">Credentials</a>
       <a href="contatti.html">Contact</a>
       <a href="/api/logout">Log out</a>
@@ -38,35 +100,31 @@
   <section id="resources">
     <div class="wrap">
       <div class="section-head">
-        <div><span class="eyebrow">Flight Crew</span><h2>Resource library</h2></div>
+        <div><span class="eyebrow">Approved pilots</span><h2>Resource library</h2></div>
       </div>
-      <div class="resource-grid">
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Hydraulic System — Quick Reference</h3>
-            <p>Single-sheet system logic across all four hydraulic systems, sourced from FCOM/QRH, prioritizing realistic dual-system-loss scenarios over rare edge cases.</p>
-            <a class="btn ghost" href="resources/mental-map-hydraulic.txt" download style="margin-top:6px;">Download</a>
+      <div id="status" class="form-status" role="status"></div>
+
+      <div class="lib" id="lib" hidden>
+        <aside class="lib-side">
+          <div class="lib-search" id="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input type="search" id="q" placeholder="Search all documents" aria-label="Search all documents" autocomplete="off">
+            <button type="button" class="clear" id="q-clear" aria-label="Clear search">&times;</button>
           </div>
-        </div>
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Electrical System — Quick Reference</h3>
-            <p>System logic and failure-mode recall aid for the 747-400 electrical architecture, sourced from FCOM/QRH.</p>
-            <a class="btn ghost" href="resources/mental-map-electrical.txt" download style="margin-top:6px;">Download</a>
+          <nav class="lib-nav" aria-label="Document categories">
+            <div class="label">Categories</div>
+            <ul id="cat-list"></ul>
+          </nav>
+        </aside>
+
+        <div class="lib-main">
+          <div class="lib-head">
+            <h3 id="view-title">All documents</h3>
+            <div class="sub" id="view-sub" aria-live="polite"></div>
           </div>
-        </div>
-        <div class="resource-card">
-          <div class="top"><span class="tag">Mental Map</span></div>
-          <div class="body">
-            <h3>Flight Control System — Quick Reference</h3>
-            <p>Recall aid for the flight control system, including a brief system schematic, sourced from FCOM/QRH.</p>
-            <a class="btn ghost" href="resources/mental-map-flight-control.txt" download style="margin-top:6px;">Download</a>
-          </div>
+          <ul class="lib-list" id="doc-list"></ul>
         </div>
       </div>
-      <p class="resource-note">Downloads are placeholder files for now — real PDFs pending, see README-DEPLOY.md.</p>
     </div>
   </section>
 </main>
@@ -80,10 +138,207 @@
     <nav>
       <a href="index.html">Home</a>
       <a href="risorse.html">Resources</a>
+      <a href="articoli.html">Articles</a>
       <a href="credenziali.html">Credentials</a>
       <a href="contatti.html">Contact</a>
     </nav>
   </div>
 </footer>
+
+<script>
+(function(){
+  var UNCAT = 'uncategorized';
+  var status = document.getElementById('status');
+  var lib = document.getElementById('lib');
+  var catList = document.getElementById('cat-list');
+  var docList = document.getElementById('doc-list');
+  var viewTitle = document.getElementById('view-title');
+  var viewSub = document.getElementById('view-sub');
+  var q = document.getElementById('q');
+  var qClear = document.getElementById('q-clear');
+  var searchWrap = document.getElementById('search-wrap');
+
+  var docs = [];
+  var cats = [];      // [{slug, name, sort, count}]
+  var current = 'all';
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatBytes(n){
+    if (!n) return '';
+    if (n < 1024*1024) return Math.round(n/1024) + ' KB';
+    return (n/1024/1024).toFixed(1) + ' MB';
+  }
+  function norm(s){
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function highlight(text, term){
+    var safe = esc(text);
+    if (!term) return safe;
+    var t = esc(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safe.replace(new RegExp('(' + t + ')', 'ig'), '<mark>$1</mark>');
+  }
+  function slugOf(d){ return d.category_slug || UNCAT; }
+  function catName(slug){
+    var c = cats.find(function(x){ return x.slug === slug; });
+    return c ? c.name : 'All documents';
+  }
+  function plural(n){ return n + (n === 1 ? ' document' : ' documents'); }
+
+  function buildCategories(){
+    var map = {};
+    docs.forEach(function(d){
+      var slug = slugOf(d);
+      if (!map[slug]){
+        map[slug] = {
+          slug: slug,
+          name: d.category_name || 'Uncategorized',
+          sort: slug === UNCAT ? Infinity : (d.category_sort || 0),
+          count: 0
+        };
+      }
+      map[slug].count++;
+    });
+    cats = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a, b){
+      if (a.sort !== b.sort) return a.sort < b.sort ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function renderNav(){
+    var items = '<li><a href="#all" data-slug="all"' + (current === 'all' ? ' aria-current="true"' : '') + '><span>All documents</span><span class="count">' + docs.length + '</span></a></li>';
+    items += '<li class="sep" role="presentation"></li>';
+    items += cats.map(function(c){
+      return '<li><a href="#' + esc(c.slug) + '" data-slug="' + esc(c.slug) + '"' + (current === c.slug ? ' aria-current="true"' : '') + '>' +
+        '<span>' + esc(c.name) + '</span><span class="count">' + c.count + '</span></a></li>';
+    }).join('');
+    catList.innerHTML = items;
+  }
+
+  function docHtml(d, term, showCat){
+    var meta = [];
+    if (d.revision_label) meta.push('<span class="chip rev">' + esc(d.revision_label) + '</span>');
+    if (showCat) meta.push('<span class="chip cat">' + esc(d.category_name || 'Uncategorized') + '</span>');
+    if (d.revision_date) meta.push('<span>Revised ' + esc(d.revision_date) + '</span>');
+    if (d.file_size) meta.push('<span>' + formatBytes(d.file_size) + '</span>');
+    return '<li class="doc">' +
+      '<div class="ico" aria-hidden="true">PDF</div>' +
+      '<div>' +
+        '<h4>' + highlight(d.title, term) + '</h4>' +
+        (d.description ? '<p>' + highlight(d.description, term) + '</p>' : '') +
+        (meta.length ? '<div class="meta">' + meta.join('') + '</div>' : '') +
+      '</div>' +
+      '<a class="btn ghost" href="/api/documents/download?id=' + encodeURIComponent(d.id) + '" aria-label="Download ' + esc(d.title) + '">Download PDF</a>' +
+    '</li>';
+  }
+
+  function render(){
+    var term = q.value.trim();
+    var nterm = norm(term);
+    searchWrap.classList.toggle('has-value', !!term);
+
+    var list;
+    if (nterm){
+      // Search always covers the whole library, whatever category is selected.
+      list = docs.filter(function(d){
+        return norm(d.title).indexOf(nterm) !== -1 ||
+               norm(d.description).indexOf(nterm) !== -1 ||
+               norm(d.revision_label).indexOf(nterm) !== -1 ||
+               norm(d.category_name).indexOf(nterm) !== -1;
+      });
+      viewTitle.textContent = 'Search results';
+      viewSub.textContent = plural(list.length) + ' matching “' + term + '” across all categories';
+    } else {
+      list = current === 'all' ? docs.slice() : docs.filter(function(d){ return slugOf(d) === current; });
+      viewTitle.textContent = current === 'all' ? 'All documents' : catName(current);
+      viewSub.textContent = plural(list.length);
+    }
+
+    if (!list.length){
+      docList.innerHTML = '<li class="lib-empty"><strong>No documents found</strong>' +
+        (nterm ? 'Try a different term, or browse the categories.<br><button type="button" class="btn ghost" id="empty-clear">Clear search</button>'
+               : 'Nothing published in this category yet.') +
+        '</li>';
+      return;
+    }
+    var showCat = !!nterm || current === 'all';
+    docList.innerHTML = list.map(function(d){ return docHtml(d, term, showCat); }).join('');
+  }
+
+  function select(slug){
+    var valid = slug === 'all' || cats.some(function(c){ return c.slug === slug; });
+    current = valid ? slug : 'all';
+    renderNav();
+    render();
+    // Mobile: keep the selected category chip visible in the horizontal row.
+    var active = catList.querySelector('a[aria-current="true"]');
+    if (active && catList.scrollWidth > catList.clientWidth){
+      var li = active.parentNode;
+      catList.scrollLeft = Math.max(0, li.offsetLeft - catList.offsetLeft - 8);
+    }
+  }
+
+  function fromHash(){
+    try { return decodeURIComponent((location.hash || '').replace(/^#/, '')) || 'all'; }
+    catch (e) { return 'all'; }
+  }
+
+  catList.addEventListener('click', function(e){
+    var a = e.target.closest('a[data-slug]');
+    if (!a) return;
+    e.preventDefault();
+    q.value = '';
+    var slug = a.dataset.slug;
+    history.replaceState(null, '', slug === 'all' ? location.pathname : '#' + slug);
+    select(slug);
+    if (window.matchMedia('(max-width: 860px)').matches){
+      document.querySelector('.lib-main').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  window.addEventListener('hashchange', function(){ select(fromHash()); });
+
+  q.addEventListener('input', render);
+  q.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ q.value = ''; render(); } });
+  qClear.addEventListener('click', function(){ q.value = ''; render(); q.focus(); });
+  docList.addEventListener('click', function(e){
+    if (e.target.id === 'empty-clear'){ q.value = ''; render(); q.focus(); }
+  });
+
+  fetch('/api/documents')
+    .then(function(res){
+      if (res.status === 401){ window.location.href = 'login.html?next=' + encodeURIComponent(location.pathname); return null; }
+      return res.json();
+    })
+    .then(function(data){
+      if (!data) return;
+      if (!data.ok){
+        status.className = 'form-status err';
+        status.textContent = 'Could not load the resource library.';
+        status.style.display = 'block';
+        return;
+      }
+      if (!data.documents.length){
+        status.className = 'form-status';
+        status.textContent = 'No documents published yet — check back soon.';
+        status.style.display = 'block';
+        return;
+      }
+      status.style.display = 'none';
+      docs = data.documents.slice().sort(function(a, b){ return String(a.title).localeCompare(String(b.title)); });
+      buildCategories();
+      lib.hidden = false;
+      select(fromHash());
+    })
+    .catch(function(){
+      status.className = 'form-status err';
+      status.textContent = 'Connection problem — please reload.';
+      status.style.display = 'block';
+    });
+})();
+</script>
 </body>
 </html>

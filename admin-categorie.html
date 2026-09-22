@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Categories — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="/api/admin/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Admin</span>
+      <h1>Categories</h1>
+      <nav class="admin-tabs">
+        <a href="admin.html">Access requests</a>
+        <a href="admin-documenti.html">Documents</a>
+        <a href="admin-articoli.html">Articles</a>
+        <a href="admin-categorie.html" aria-current="page">Categories</a>
+      </nav>
+      <p style="margin-top:16px; font-size:1rem; color:var(--ink-soft); max-width:60ch;">Subcategories used to organize both the private document library and public articles. Deleting a category never deletes its content — it's just unfiled.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div id="form-status" class="form-status" role="status"></div>
+
+      <form id="cat-form" class="admin-form">
+        <input type="hidden" id="cat-id" value="">
+        <div class="row3">
+          <div class="field">
+            <label for="cat-name">Name</label>
+            <input type="text" id="cat-name" required placeholder="e.g. Hydraulics">
+          </div>
+          <div class="field">
+            <label for="cat-kind">Used for</label>
+            <select id="cat-kind">
+              <option value="document">Document library</option>
+              <option value="article">Articles</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cat-order">Sort order</label>
+            <input type="number" id="cat-order" value="0">
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn">Save category</button>
+          <button type="button" id="cat-cancel" class="btn ghost" hidden>Cancel edit</button>
+        </div>
+      </form>
+
+      <h2 style="font-size:1.25rem; margin-bottom:16px;">Document categories</h2>
+      <div id="doc-cats" style="margin-bottom:40px;"></div>
+
+      <h2 style="font-size:1.25rem; margin-bottom:16px;">Article categories</h2>
+      <div id="art-cats"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav><a href="index.html">Home</a></nav>
+  </div>
+</footer>
+
+<style>
+  .cat-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; background:var(--paper); }
+  .cat-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
+  .cat-row .slug{ font-size:0.8125rem; color:var(--grey); margin-left:8px; }
+  .cat-row .actions{ display:flex; gap:8px; }
+  .cat-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
+</style>
+
+<script>
+(function(){
+  var formStatus = document.getElementById('form-status');
+  var form = document.getElementById('cat-form');
+  var idField = document.getElementById('cat-id');
+  var nameField = document.getElementById('cat-name');
+  var kindField = document.getElementById('cat-kind');
+  var orderField = document.getElementById('cat-order');
+  var cancelBtn = document.getElementById('cat-cancel');
+  var docCats = document.getElementById('doc-cats');
+  var artCats = document.getElementById('art-cats');
+  var all = [];
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function render(){
+    var docs = all.filter(function(c){ return c.kind === 'document'; });
+    var arts = all.filter(function(c){ return c.kind === 'article'; });
+    docCats.innerHTML = docs.length ? docs.map(rowHtml).join('') : '<p style="color:var(--grey);">No document categories yet.</p>';
+    artCats.innerHTML = arts.length ? arts.map(rowHtml).join('') : '<p style="color:var(--grey);">No article categories yet.</p>';
+  }
+
+  function rowHtml(c){
+    return '<div class="cat-row">' +
+      '<div><span class="name">' + esc(c.name) + '</span><span class="slug">/' + esc(c.slug) + '</span></div>' +
+      '<div class="actions">' +
+        '<button type="button" data-action="edit" data-id="' + c.id + '">Edit</button>' +
+        '<button type="button" data-action="delete" data-id="' + c.id + '" data-name="' + esc(c.name) + '">Delete</button>' +
+      '</div></div>';
+  }
+
+  function load(){
+    fetch('/api/admin/categories')
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(data){
+        if (!data) return;
+        all = data.categories || [];
+        render();
+      });
+  }
+
+  function resetForm(){
+    idField.value = '';
+    form.reset();
+    orderField.value = 0;
+    cancelBtn.hidden = true;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    formStatus.className = 'form-status';
+    formStatus.textContent = '';
+    var payload = {
+      id: idField.value || undefined,
+      name: nameField.value.trim(),
+      kind: kindField.value,
+      sort_order: Number(orderField.value) || 0
+    };
+    fetch('/api/admin/categories/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.ok){
+          formStatus.className = 'form-status err';
+          formStatus.textContent = data.error === 'slug_taken' ? 'A category with this name already exists for this section.' : 'Could not save the category.';
+          return;
+        }
+        resetForm();
+        load();
+      })
+      .catch(function(){
+        formStatus.className = 'form-status err';
+        formStatus.textContent = 'Connection problem — please try again.';
+      });
+  });
+
+  cancelBtn.addEventListener('click', resetForm);
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var id = Number(btn.dataset.id);
+    var cat = all.find(function(c){ return c.id === id; });
+    if (btn.dataset.action === 'edit' && cat){
+      idField.value = cat.id;
+      nameField.value = cat.name;
+      kindField.value = cat.kind;
+      orderField.value = cat.sort_order;
+      cancelBtn.hidden = false;
+      nameField.focus();
+    }
+    if (btn.dataset.action === 'delete'){
+      if (!window.confirm('Delete "' + (btn.dataset.name || 'this category') + '"? Documents and articles in it will just become uncategorized.')) return;
+      fetch('/api/admin/categories/delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
+      }).then(function(){ load(); });
+    }
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

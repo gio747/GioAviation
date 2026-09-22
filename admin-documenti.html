@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Documents — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="/api/admin/logout">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <span class="eyebrow kicker">Admin</span>
+      <h1>Documents</h1>
+      <nav class="admin-tabs">
+        <a href="admin.html">Access requests</a>
+        <a href="admin-documenti.html" aria-current="page">Documents</a>
+        <a href="admin-articoli.html">Articles</a>
+        <a href="admin-categorie.html">Categories</a>
+      </nav>
+      <p style="margin-top:16px; font-size:1rem; color:var(--ink-soft); max-width:60ch;">PDFs are stored in Cloudflare R2 and listed here with their metadata. Only pilots with an approved account and a completed profile can download a <strong>published</strong> document; <strong>draft</strong> ones stay hidden from the library.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div id="upload-status" class="form-status" role="status"></div>
+
+      <form id="upload-form" class="admin-form" enctype="multipart/form-data">
+        <h2 style="font-size:1.125rem;">Upload a new PDF</h2>
+        <div class="field">
+          <label for="up-file">PDF file</label>
+          <input type="file" id="up-file" accept="application/pdf" required>
+        </div>
+        <div class="field">
+          <label for="up-title">Title</label>
+          <input type="text" id="up-title" required placeholder="e.g. Hydraulic System — Quick Reference">
+        </div>
+        <div class="row3">
+          <div class="field">
+            <label for="up-category">Category</label>
+            <select id="up-category"><option value="">— none —</option></select>
+          </div>
+          <div class="field">
+            <label for="up-revision-label">Revision label <span style="font-weight:400; color:var(--grey);">(optional)</span></label>
+            <input type="text" id="up-revision-label" placeholder="e.g. FCOM Vol 2 · Rev 14">
+          </div>
+          <div class="field">
+            <label for="up-revision-date">Revision date <span style="font-weight:400; color:var(--grey);">(optional)</span></label>
+            <input type="date" id="up-revision-date">
+          </div>
+        </div>
+        <div class="field">
+          <label for="up-description">Description <span style="font-weight:400; color:var(--grey);">(optional)</span></label>
+          <input type="text" id="up-description">
+        </div>
+        <div class="field">
+          <label for="up-status">Status</label>
+          <select id="up-status">
+            <option value="draft">Draft — not visible to pilots</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn">Upload</button>
+        </div>
+      </form>
+
+      <div id="edit-status" class="form-status" role="status"></div>
+      <form id="edit-form" class="admin-form" hidden>
+        <h2 style="font-size:1.125rem;">Edit document metadata</h2>
+        <input type="hidden" id="ed-id">
+        <div class="field">
+          <label for="ed-title">Title</label>
+          <input type="text" id="ed-title" required>
+        </div>
+        <div class="row3">
+          <div class="field">
+            <label for="ed-category">Category</label>
+            <select id="ed-category"><option value="">— none —</option></select>
+          </div>
+          <div class="field">
+            <label for="ed-revision-label">Revision label</label>
+            <input type="text" id="ed-revision-label">
+          </div>
+          <div class="field">
+            <label for="ed-revision-date">Revision date</label>
+            <input type="date" id="ed-revision-date">
+          </div>
+        </div>
+        <div class="field">
+          <label for="ed-description">Description</label>
+          <input type="text" id="ed-description">
+        </div>
+        <div class="field">
+          <label for="ed-status">Status</label>
+          <select id="ed-status">
+            <option value="draft">Draft — not visible to pilots</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn">Save changes</button>
+          <button type="button" id="ed-cancel" class="btn ghost">Cancel</button>
+        </div>
+        <p class="small" style="color:var(--grey);">To replace the PDF itself, delete this document and upload it again — the file cannot be swapped in place.</p>
+      </form>
+
+      <h2 style="font-size:1.25rem; margin-bottom:16px;">All documents</h2>
+      <div id="doc-list"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav><a href="index.html">Home</a></nav>
+  </div>
+</footer>
+
+<style>
+  .doc-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:center; padding:14px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; background:var(--paper); }
+  .doc-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
+  .doc-row .muted{ color:var(--grey); font-size:0.8125rem; }
+  .doc-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .doc-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
+  @media (max-width:860px){ .doc-row{ grid-template-columns:1fr; } .doc-row .actions{ justify-content:flex-start; } }
+</style>
+
+<script>
+(function(){
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatBytes(n){
+    if (!n) return '';
+    if (n < 1024*1024) return Math.round(n/1024) + ' KB';
+    return (n/1024/1024).toFixed(1) + ' MB';
+  }
+
+  var uploadForm = document.getElementById('upload-form');
+  var uploadStatus = document.getElementById('upload-status');
+  var upCategory = document.getElementById('up-category');
+
+  var editForm = document.getElementById('edit-form');
+  var editStatus = document.getElementById('edit-status');
+  var edCategory = document.getElementById('ed-category');
+  var edCancel = document.getElementById('ed-cancel');
+
+  var docList = document.getElementById('doc-list');
+  var documents = [];
+  var categoryOptionsHtml = '<option value="">— none —</option>';
+
+  function loadCategories(){
+    return fetch('/api/admin/categories').then(function(res){ return res.json(); }).then(function(data){
+      var cats = (data.categories || []).filter(function(c){ return c.kind === 'document'; });
+      categoryOptionsHtml = '<option value="">— none —</option>' +
+        cats.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+      upCategory.innerHTML = categoryOptionsHtml;
+      edCategory.innerHTML = categoryOptionsHtml;
+    });
+  }
+
+  function rowHtml(d){
+    return '<div class="doc-row">' +
+      '<div><div class="name">' + esc(d.title) + '</div><div class="muted">' + esc(d.file_name) + (d.file_size ? ' · ' + formatBytes(d.file_size) : '') + '</div></div>' +
+      '<div class="muted">' + esc(d.category_name || '—') + '</div>' +
+      '<div><span class="pill ' + d.status + '">' + esc(d.status) + '</span></div>' +
+      '<div class="actions">' +
+        '<button type="button" data-action="edit" data-id="' + d.id + '">Edit</button>' +
+        '<button type="button" data-action="delete" data-id="' + d.id + '" data-name="' + esc(d.title) + '">Delete</button>' +
+      '</div></div>';
+  }
+
+  function loadDocuments(){
+    fetch('/api/admin/documents')
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(data){
+        if (!data) return;
+        documents = data.documents || [];
+        docList.innerHTML = documents.length ? documents.map(rowHtml).join('') : '<p style="color:var(--grey);">No documents uploaded yet.</p>';
+      });
+  }
+
+  uploadForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    uploadStatus.className = 'form-status';
+    uploadStatus.textContent = '';
+
+    var file = document.getElementById('up-file').files[0];
+    if (!file){
+      uploadStatus.className = 'form-status err';
+      uploadStatus.textContent = 'Choose a PDF file first.';
+      return;
+    }
+
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('title', document.getElementById('up-title').value.trim());
+    fd.append('category_id', document.getElementById('up-category').value);
+    fd.append('revision_label', document.getElementById('up-revision-label').value.trim());
+    fd.append('revision_date', document.getElementById('up-revision-date').value);
+    fd.append('description', document.getElementById('up-description').value.trim());
+    fd.append('status', document.getElementById('up-status').value);
+
+    var btn = uploadForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    uploadStatus.textContent = 'Uploading…';
+    uploadStatus.style.display = 'block';
+    uploadStatus.className = 'form-status ok';
+
+    fetch('/api/admin/documents/upload', { method: 'POST', body: fd })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        btn.disabled = false;
+        if (!data.ok){
+          uploadStatus.className = 'form-status err';
+          uploadStatus.textContent = data.error === 'pdf_only' ? 'Only PDF files are accepted.' :
+            data.error === 'file_too_large' ? 'File is too large (max 100 MB).' : 'Upload failed.';
+          return;
+        }
+        uploadStatus.className = 'form-status ok';
+        uploadStatus.textContent = 'Uploaded.';
+        uploadForm.reset();
+        upCategory.innerHTML = categoryOptionsHtml;
+        loadDocuments();
+      })
+      .catch(function(){
+        btn.disabled = false;
+        uploadStatus.className = 'form-status err';
+        uploadStatus.textContent = 'Connection problem — please try again.';
+      });
+  });
+
+  editForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    editStatus.className = 'form-status';
+    editStatus.textContent = '';
+    var payload = {
+      id: document.getElementById('ed-id').value,
+      title: document.getElementById('ed-title').value.trim(),
+      category_id: edCategory.value || null,
+      revision_label: document.getElementById('ed-revision-label').value.trim(),
+      revision_date: document.getElementById('ed-revision-date').value,
+      description: document.getElementById('ed-description').value.trim(),
+      status: document.getElementById('ed-status').value
+    };
+    fetch('/api/admin/documents/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.ok){
+          editStatus.className = 'form-status err';
+          editStatus.textContent = 'Could not save changes.';
+          return;
+        }
+        editForm.hidden = true;
+        loadDocuments();
+      })
+      .catch(function(){
+        editStatus.className = 'form-status err';
+        editStatus.textContent = 'Connection problem — please try again.';
+      });
+  });
+
+  edCancel.addEventListener('click', function(){ editForm.hidden = true; });
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'edit'){
+      var d = documents.find(function(x){ return x.id === id; });
+      if (!d) return;
+      document.getElementById('ed-id').value = d.id;
+      document.getElementById('ed-title').value = d.title;
+      edCategory.value = d.category_id || '';
+      document.getElementById('ed-revision-label').value = d.revision_label || '';
+      document.getElementById('ed-revision-date').value = d.revision_date || '';
+      document.getElementById('ed-description').value = d.description || '';
+      document.getElementById('ed-status').value = d.status;
+      editForm.hidden = false;
+      window.scrollTo({ top: editForm.offsetTop - 20, behavior: 'smooth' });
+    }
+    if (btn.dataset.action === 'delete'){
+      if (!window.confirm('Delete "' + (btn.dataset.name || 'this document') + '" and its PDF permanently?')) return;
+      fetch('/api/admin/documents/delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
+      }).then(function(){ loadDocuments(); });
+    }
+  });
+
+  loadCategories().then(loadDocuments);
+})();
+</script>
+</body>
+</html>
