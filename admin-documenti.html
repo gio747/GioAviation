@@ -249,7 +249,7 @@
         if (!data.ok){
           uploadStatus.className = 'form-status err';
           uploadStatus.textContent = data.error === 'pdf_only' ? 'Only PDF files are accepted.' :
-            data.error === 'file_too_large' ? 'File is too large (max 100 MB).' : 'Upload failed.';
+            data.error === 'file_too_large' ? 'File is too large (max 100 MB).' : 'Upload failed: ' + (data.error || 'unknown');
           return;
         }
         uploadStatus.className = 'form-status ok';
