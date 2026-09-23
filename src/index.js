@@ -735,7 +735,7 @@ async function apiAdminDocumentUpload(request, env) {
   try {
     form = await request.formData();
   } catch (e) {
-    return json({ ok: false, error: "bad_request" }, 400);
+    return json({ ok: false, error: "bad_request: " + (e && e.message) }, 400);
   }
 
   const file = form.get("file");
@@ -752,17 +752,27 @@ async function apiAdminDocumentUpload(request, env) {
   if (file.size > MAX_UPLOAD_BYTES) return json({ ok: false, error: "file_too_large" }, 400);
 
   const key = `documents/${crypto.randomUUID()}.pdf`;
-  await env.DOCS.put(key, file.stream(), {
-    httpMetadata: { contentType: file.type || "application/pdf" },
-  });
+  try {
+    await env.DOCS.put(key, file, {
+      httpMetadata: { contentType: "application/pdf" },
+    });
+  } catch (e) {
+    return json({ ok: false, error: "r2: " + (e && e.message) }, 500);
+  }
 
-  const result = await env.DB.prepare(
+  let result;
+  try {
+  result = await env.DB.prepare(
     `INSERT INTO documents (category_id, title, description, file_key, file_name, file_size, content_type, revision_label, revision_date, status, uploaded_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
     categoryId, title, description, key, file.name || `${title}.pdf`, file.size,
     file.type || "application/pdf", revisionLabel, revisionDate, status, new Date().toISOString()
   ).run();
+  } catch (e) {
+    try { await env.DOCS.delete(key); } catch (_) {}
+    return json({ ok: false, error: "db: " + (e && e.message) }, 500);
+  }
 
   return json({ ok: true, id: result.meta.last_row_id });
 }
