@@ -14,13 +14,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
-<!-- Markdown is stored raw in D1 and rendered here, in the reader's own
-     browser — the Worker never runs a Markdown/HTML parser, keeping it a
-     single dependency-free script. DOMPurify strips anything unexpected
-     before it reaches the page, as a second line of defence beyond "only
-     Gio writes articles". -->
+<!-- Articles are stored either as HTML (written with the visual editor in
+     admin-articoli.html) or as Markdown (older articles). Both are rendered
+     here, in the reader's browser, and always sanitized with DOMPurify. Only
+     the text-align style is kept; every other inline style is removed. -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<style>
+  .article-body p, .article-body li { overflow-wrap: break-word; }
+  .article-body [style*="justify"] { hyphens: auto; -webkit-hyphens: auto; }
+  .article-body hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+  .article-body table { border-collapse: collapse; margin-top: 1em; width: 100%; }
+  .article-body th, .article-body td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+</style>
 </head>
 <body>
 
@@ -76,11 +82,37 @@
   var catEl = document.getElementById('category');
   var metaEl = document.getElementById('meta');
   var bodyEl = document.getElementById('body');
+  var ALIGN = ['left', 'center', 'right', 'justify'];
 
   function esc(s){
     return String(s || '').replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
+  }
+
+  function isHtml(s){
+    return /^\s*<(p|h[1-6]|ul|ol|div|blockquote|table|hr)[\s>\/]/i.test(s || '');
+  }
+
+  function render(raw){
+    var html = isHtml(raw) ? raw : (window.marked ? marked.parse(raw) : null);
+    if (html === null || !window.DOMPurify){
+      bodyEl.textContent = raw;
+      return;
+    }
+    var clean = DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
+    var box = document.createElement('div');
+    box.innerHTML = clean;
+    box.querySelectorAll('[style]').forEach(function(el){
+      var a = (el.style.textAlign || '').toLowerCase();
+      el.removeAttribute('style');
+      if (ALIGN.indexOf(a) > -1) el.style.textAlign = a;
+    });
+    box.querySelectorAll('a[href]').forEach(function(a){
+      a.setAttribute('rel', 'noopener noreferrer');
+      a.setAttribute('target', '_blank');
+    });
+    bodyEl.innerHTML = box.innerHTML;
   }
 
   if (!slug){
@@ -112,8 +144,7 @@
         var d = new Date(a.published_at);
         metaEl.textContent = isNaN(d) ? '' : d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
       }
-      var rawHtml = (window.marked ? marked.parse(a.body_markdown || '') : esc(a.body_markdown || ''));
-      bodyEl.innerHTML = window.DOMPurify ? DOMPurify.sanitize(rawHtml) : rawHtml;
+      render(a.body_markdown || '');
     })
     .catch(function(){
       titleEl.textContent = 'Could not load this article';

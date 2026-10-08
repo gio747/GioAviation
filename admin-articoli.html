@@ -51,7 +51,7 @@
     <div class="wrap">
       <div id="form-status" class="form-status" role="status"></div>
 
-      <form id="art-form" class="admin-form">
+      <form id="art-form" class="admin-form" novalidate>
         <input type="hidden" id="art-id" value="">
         <div class="field">
           <label for="art-title">Title</label>
@@ -64,7 +64,11 @@
           </div>
           <div class="field">
             <label for="art-category">Category</label>
-            <select id="art-category"><option value="">— none —</option></select>
+            <div class="cat-pick">
+              <select id="art-category"><option value="">— none —</option></select>
+              <button type="button" id="cat-new" class="btn ghost sm" title="Create a new article category">+ New</button>
+            </div>
+            <div id="cat-hint" class="help" style="display:none; font-size:0.8125rem; color:var(--caution);"></div>
           </div>
           <div class="field">
             <label for="art-status">Status</label>
@@ -78,14 +82,47 @@
           <label for="art-excerpt">Excerpt <span style="font-weight:400; color:var(--grey);">(shown in the article list)</span></label>
           <input type="text" id="art-excerpt">
         </div>
+
         <div class="field">
-          <label for="art-body">Body (Markdown)</label>
-          <textarea id="art-body" class="markdown" required placeholder="## Heading&#10;&#10;Text goes here. **Bold**, _italic_, [links](https://...), lists, and &#96;code&#96; all work."></textarea>
+          <label id="art-body-label">Body</label>
+          <div class="rte">
+            <div class="rte-bar" role="toolbar" aria-label="Text formatting">
+              <select id="rte-block" aria-label="Paragraph style">
+                <option value="p">Paragraph</option>
+                <option value="h2">Heading</option>
+                <option value="h3">Subheading</option>
+                <option value="blockquote">Quote</option>
+              </select>
+              <span class="sep"></span>
+              <button type="button" data-cmd="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
+              <button type="button" data-cmd="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+              <button type="button" data-cmd="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+              <span class="sep"></span>
+              <button type="button" data-cmd="insertUnorderedList" title="Bulleted list" aria-label="Bulleted list">&bull;&nbsp;List</button>
+              <button type="button" data-cmd="insertOrderedList" title="Numbered list" aria-label="Numbered list">1.&nbsp;List</button>
+              <span class="sep"></span>
+              <button type="button" data-align="left" title="Align left" aria-label="Align left"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M2 8h9M2 12h14M2 16h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></button>
+              <button type="button" data-align="center" title="Center" aria-label="Center"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M4.5 8h9M2 12h14M4.5 16h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></button>
+              <button type="button" data-align="right" title="Align right" aria-label="Align right"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M7 8h9M2 12h14M7 16h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></button>
+              <button type="button" data-align="justify" title="Justify (both sides)" aria-label="Justify"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M2 8h14M2 12h14M2 16h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></button>
+              <button type="button" id="rte-justify-all" title="Justify every paragraph of the article">Justify all</button>
+              <span class="sep"></span>
+              <button type="button" id="rte-link" title="Insert link">Link</button>
+              <button type="button" data-cmd="unlink" title="Remove link">Unlink</button>
+              <button type="button" data-cmd="insertHorizontalRule" title="Horizontal rule">&mdash;</button>
+              <button type="button" data-cmd="removeFormat" title="Clear formatting of the selection">Clear</button>
+              <span class="sep"></span>
+              <button type="button" data-cmd="undo" title="Undo (Ctrl+Z)" aria-label="Undo">&#8630;</button>
+              <button type="button" data-cmd="redo" title="Redo (Ctrl+Y)" aria-label="Redo">&#8631;</button>
+            </div>
+            <div id="art-body" class="rte-area article-body" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="art-body-label" data-placeholder="Write the article here. Select text and use the toolbar above."></div>
+          </div>
         </div>
+
         <div class="actions-row">
           <button type="submit" class="btn">Save article</button>
           <button type="button" id="art-cancel" class="btn ghost" hidden>Cancel edit</button>
-          <button type="button" id="art-preview-toggle" class="btn ghost">Preview</button>
+          <button type="button" id="art-preview-toggle" class="btn ghost">Preview as readers see it</button>
         </div>
         <div id="art-preview" class="article-body" style="display:none; border-top:1px solid var(--line); padding-top:20px; margin-top:6px;"></div>
       </form>
@@ -113,6 +150,25 @@
   .art-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
   .art-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
   @media (max-width:860px){ .art-row{ grid-template-columns:1fr; } .art-row .actions{ justify-content:flex-start; } }
+
+  .cat-pick{ display:flex; gap:8px; }
+  .cat-pick select{ flex:1; min-width:0; }
+
+  .rte{ border:1px solid #C6D2DF; border-radius:var(--radius-ctl); background:var(--paper); }
+  .rte-bar{ display:flex; flex-wrap:wrap; gap:4px; align-items:center; padding:8px; border-bottom:1px solid var(--line); background:var(--tint); position:sticky; top:64px; z-index:5; border-radius:var(--radius-ctl) var(--radius-ctl) 0 0; }
+  .rte-bar .sep{ width:1px; height:22px; background:var(--line); margin:0 4px; }
+  .rte-bar button, .rte-bar select{
+    font-family:var(--font); font-size:0.875rem; font-weight:600; color:var(--navy);
+    min-width:36px; height:36px; padding:0 10px; border:1px solid transparent; border-radius:4px; background:transparent; cursor:pointer;
+  }
+  .rte-bar select{ border-color:#C6D2DF; background:var(--paper); padding:0 8px; }
+  .rte-bar button:hover{ background:var(--tint-strong); }
+  .rte-bar button.on{ background:var(--navy); color:#fff; }
+  .rte-area{ min-height:380px; max-width:none; padding:18px 20px; outline:none; overflow-wrap:break-word; }
+  .rte-area:focus{ outline:2px solid var(--focus); outline-offset:-2px; }
+  .rte-area:empty::before{ content:attr(data-placeholder); color:var(--grey); }
+  .rte-area hr, #art-preview hr{ border:0; border-top:1px solid var(--line); margin:1.6em 0; }
+  .rte-area [style*="justify"], #art-preview [style*="justify"]{ hyphens:auto; -webkit-hyphens:auto; }
 </style>
 
 <script>
@@ -123,14 +179,25 @@
   var titleField = document.getElementById('art-title');
   var slugField = document.getElementById('art-slug');
   var categoryField = document.getElementById('art-category');
+  var catHint = document.getElementById('cat-hint');
+  var catNew = document.getElementById('cat-new');
   var statusField = document.getElementById('art-status');
   var excerptField = document.getElementById('art-excerpt');
-  var bodyField = document.getElementById('art-body');
+  var editor = document.getElementById('art-body');
+  var blockSel = document.getElementById('rte-block');
   var cancelBtn = document.getElementById('art-cancel');
   var previewToggle = document.getElementById('art-preview-toggle');
   var previewEl = document.getElementById('art-preview');
   var list = document.getElementById('art-list');
   var articles = [];
+
+  var ALIGN = ['left', 'center', 'right', 'justify'];
+  var BLOCK_RE = /^(P|H[1-6]|UL|OL|BLOCKQUOTE|DIV|HR|TABLE|PRE)$/;
+  var PURIFY = {
+    ALLOWED_TAGS: ['p','br','h2','h3','h4','strong','b','em','i','u','ul','ol','li','blockquote','a','hr','div','table','thead','tbody','tr','td','th','img','code','pre'],
+    ALLOWED_ATTR: ['href','target','rel','style','src','alt','colspan','rowspan'],
+    ALLOW_DATA_ATTR: false
+  };
 
   function esc(s){
     return String(s || '').replace(/[&<>"']/g, function(c){
@@ -138,14 +205,213 @@
     });
   }
 
-  function loadCategories(){
-    return fetch('/api/admin/categories').then(function(res){ return res.json(); }).then(function(data){
-      var cats = (data.categories || []).filter(function(c){ return c.kind === 'article'; });
-      categoryField.innerHTML = '<option value="">— none —</option>' +
-        cats.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+  function setStatus(kind, msg){
+    formStatus.className = 'form-status' + (kind ? ' ' + kind : '');
+    formStatus.textContent = msg || '';
+    if (kind) window.scrollTo({ top: Math.max(0, form.offsetTop - 80), behavior: 'smooth' });
+  }
+
+  // ---------------------------------------------------------- HTML handling --
+  // Articles are stored as sanitized HTML (older ones are Markdown, converted
+  // to HTML when opened here). Only the text-align style survives.
+
+  function isHtml(s){
+    return /^\s*<(p|h[1-6]|ul|ol|div|blockquote|table|hr)[\s>\/]/i.test(s || '');
+  }
+
+  function clean(html){
+    var out = window.DOMPurify ? DOMPurify.sanitize(html, PURIFY) : '';
+    var box = document.createElement('div');
+    box.innerHTML = out;
+    box.querySelectorAll('[style]').forEach(function(el){
+      var a = (el.style.textAlign || '').toLowerCase();
+      el.removeAttribute('style');
+      if (ALIGN.indexOf(a) > -1) el.style.textAlign = a;
+    });
+    box.querySelectorAll('a[href]').forEach(function(a){
+      a.setAttribute('rel', 'noopener noreferrer');
+      a.setAttribute('target', '_blank');
+    });
+    return box.innerHTML;
+  }
+
+  function wrapLoose(){
+    var n = editor.firstChild;
+    while (n){
+      var isBlock = n.nodeType === 1 && BLOCK_RE.test(n.nodeName);
+      var blankText = n.nodeType === 3 && !n.textContent.trim();
+      if (isBlock || blankText){ n = n.nextSibling; continue; }
+      var p = document.createElement('p');
+      editor.insertBefore(p, n);
+      while (n && !(n.nodeType === 1 && BLOCK_RE.test(n.nodeName))){
+        var next = n.nextSibling;
+        p.appendChild(n);
+        n = next;
+      }
+    }
+  }
+
+  function setBody(stored){
+    var raw = stored || '';
+    var html = isHtml(raw) ? raw : (window.marked ? marked.parse(raw) : '<p>' + esc(raw) + '</p>');
+    editor.innerHTML = clean(html);
+  }
+
+  function getBody(){
+    wrapLoose();
+    return clean(editor.innerHTML);
+  }
+
+  function bodyIsEmpty(){
+    return !editor.textContent.trim() && !editor.querySelector('img, hr');
+  }
+
+  // ----------------------------------------------------------------- toolbar --
+  try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
+  try { document.execCommand('styleWithCSS', false, false); } catch (e) {}
+
+  function inEditor(){
+    var sel = window.getSelection();
+    return sel && sel.rangeCount && editor.contains(sel.anchorNode);
+  }
+
+  function ensureBlocks(){
+    if (editor.firstChild && !(editor.firstChild.nodeType === 1 && BLOCK_RE.test(editor.firstChild.nodeName))){
+      document.execCommand('formatBlock', false, 'p');
+    }
+  }
+
+  function applyAlign(value){
+    editor.focus();
+    if (!inEditor()) return;
+    ensureBlocks();
+    var range = window.getSelection().getRangeAt(0);
+    Array.prototype.forEach.call(editor.children, function(ch){
+      if (ch.nodeName !== 'HR' && range.intersectsNode(ch)) ch.style.textAlign = value;
+    });
+    refreshState();
+  }
+
+  function justifyAll(){
+    wrapLoose();
+    Array.prototype.forEach.call(editor.children, function(ch){
+      if (ch.nodeName !== 'HR' && ch.nodeName !== 'TABLE') ch.style.textAlign = 'justify';
+    });
+    refreshState();
+  }
+
+  function refreshState(){
+    document.querySelectorAll('.rte-bar [data-cmd]').forEach(function(b){
+      var c = b.getAttribute('data-cmd');
+      if (['bold','italic','underline','insertUnorderedList','insertOrderedList'].indexOf(c) === -1) return;
+      var on = false;
+      try { on = inEditor() && document.queryCommandState(c); } catch (e) {}
+      b.classList.toggle('on', !!on);
+    });
+    var current = null;
+    if (inEditor()){
+      var node = window.getSelection().anchorNode;
+      while (node && node.parentNode !== editor) node = node.parentNode;
+      if (node && node.nodeType === 1){
+        current = node.style.textAlign || 'left';
+        var tag = node.nodeName.toLowerCase();
+        blockSel.value = ({ h2:'h2', h3:'h3', blockquote:'blockquote' })[tag] || 'p';
+      }
+    }
+    document.querySelectorAll('.rte-bar [data-align]').forEach(function(b){
+      b.classList.toggle('on', current !== null && b.getAttribute('data-align') === current);
     });
   }
 
+  document.querySelector('.rte-bar').addEventListener('mousedown', function(e){
+    if (e.target.closest('button')) e.preventDefault(); // keep the text selection
+  });
+
+  document.querySelector('.rte-bar').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.id === 'rte-justify-all'){ justifyAll(); return; }
+    if (btn.id === 'rte-link'){
+      editor.focus();
+      var url = window.prompt('Link address (https://… or mailto:…)');
+      if (!url) return;
+      url = url.trim();
+      if (!/^(https?:\/\/|mailto:)/i.test(url)){ setStatus('err', 'Links must start with https://, http:// or mailto:'); return; }
+      document.execCommand('createLink', false, url);
+      return;
+    }
+    if (btn.hasAttribute('data-align')){ applyAlign(btn.getAttribute('data-align')); return; }
+    var cmd = btn.getAttribute('data-cmd');
+    if (cmd){
+      editor.focus();
+      ensureBlocks();
+      document.execCommand(cmd, false, null);
+      refreshState();
+    }
+  });
+
+  blockSel.addEventListener('change', function(){
+    editor.focus();
+    ensureBlocks();
+    document.execCommand('formatBlock', false, blockSel.value);
+  });
+
+  editor.addEventListener('input', function(){
+    if (editor.firstChild && editor.firstChild.nodeType === 3) document.execCommand('formatBlock', false, 'p');
+  });
+  document.addEventListener('selectionchange', refreshState);
+
+  editor.addEventListener('paste', function(e){
+    var cd = e.clipboardData;
+    if (!cd) return;
+    e.preventDefault();
+    var html = cd.getData('text/html');
+    var text = cd.getData('text/plain');
+    var ins;
+    if (html && window.DOMPurify){
+      ins = clean(html);
+    } else {
+      ins = esc(text).split(/\n{2,}/).map(function(p){ return '<p>' + p.replace(/\n/g, '<br>') + '</p>'; }).join('');
+    }
+    document.execCommand('insertHTML', false, ins);
+  });
+
+  // -------------------------------------------------------------- categories --
+  function loadCategories(selectId){
+    return fetch('/api/admin/categories').then(function(res){ return res.json(); }).then(function(data){
+      var cats = (data.categories || []).filter(function(c){ return c.kind === 'article'; });
+      var keep = selectId !== undefined ? String(selectId) : categoryField.value;
+      categoryField.innerHTML = '<option value="">— none —</option>' +
+        cats.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+      categoryField.value = keep;
+      if (!cats.length){
+        catHint.innerHTML = 'No article categories yet. Click <b>+ New</b>, or create them in <a href="admin-categorie.html" style="text-decoration:underline;">Categories</a> (set “Used for” to Articles).';
+        catHint.style.display = 'block';
+      } else {
+        catHint.style.display = 'none';
+      }
+    });
+  }
+
+  catNew.addEventListener('click', function(){
+    var name = window.prompt('Name of the new article category');
+    if (!name || !name.trim()) return;
+    fetch('/api/admin/categories/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim(), kind: 'article', sort_order: 0 })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.ok){
+          setStatus('err', data.error === 'slug_taken' ? 'An article category with this name already exists.' : 'Could not create the category.');
+          return;
+        }
+        return loadCategories(data.id);
+      })
+      .catch(function(){ setStatus('err', 'Connection problem — please try again.'); });
+  });
+
+  // ---------------------------------------------------------------- articles --
   function rowHtml(a){
     return '<div class="art-row">' +
       '<div><div class="name">' + esc(a.title) + '</div><div class="muted">/' + esc(a.slug) + '</div></div>' +
@@ -174,14 +440,18 @@
   function resetForm(){
     idField.value = '';
     form.reset();
+    editor.innerHTML = '';
     previewEl.style.display = 'none';
+    previewToggle.textContent = 'Preview as readers see it';
     cancelBtn.hidden = true;
   }
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    formStatus.className = 'form-status';
-    formStatus.textContent = '';
+    setStatus('', '');
+    if (!window.DOMPurify){ setStatus('err', 'The editor could not load a required library. Reload the page and try again.'); return; }
+    if (!titleField.value.trim()){ setStatus('err', 'Please enter a title.'); titleField.focus(); return; }
+    if (bodyIsEmpty()){ setStatus('err', 'The article body is empty.'); editor.focus(); return; }
     var payload = {
       id: idField.value || undefined,
       title: titleField.value.trim(),
@@ -189,7 +459,7 @@
       category_id: categoryField.value || null,
       status: statusField.value,
       excerpt: excerptField.value.trim(),
-      body_markdown: bodyField.value
+      body_markdown: getBody()
     };
     fetch('/api/admin/articles/save', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -197,32 +467,26 @@
       .then(function(res){ return res.json(); })
       .then(function(data){
         if (!data.ok){
-          formStatus.className = 'form-status err';
-          formStatus.textContent = data.error === 'slug_taken' ? 'That URL slug is already used by another article.' : 'Could not save the article.';
+          setStatus('err', data.error === 'slug_taken' ? 'That URL slug is already used by another article.' : 'Could not save the article (' + (data.error || 'error') + ').');
           return;
         }
-        formStatus.className = 'form-status ok';
-        formStatus.textContent = 'Saved.';
         resetForm();
+        setStatus('ok', 'Saved.');
         loadArticles();
       })
-      .catch(function(){
-        formStatus.className = 'form-status err';
-        formStatus.textContent = 'Connection problem — please try again.';
-      });
+      .catch(function(){ setStatus('err', 'Connection problem — please try again.'); });
   });
 
   cancelBtn.addEventListener('click', resetForm);
 
   previewToggle.addEventListener('click', function(){
     if (previewEl.style.display === 'none'){
-      var raw = window.marked ? marked.parse(bodyField.value || '') : esc(bodyField.value || '');
-      previewEl.innerHTML = window.DOMPurify ? DOMPurify.sanitize(raw) : raw;
+      previewEl.innerHTML = getBody();
       previewEl.style.display = 'block';
       previewToggle.textContent = 'Hide preview';
     } else {
       previewEl.style.display = 'none';
-      previewToggle.textContent = 'Preview';
+      previewToggle.textContent = 'Preview as readers see it';
     }
   });
 
@@ -243,7 +507,7 @@
       categoryField.value = a.category_id || '';
       statusField.value = a.status;
       excerptField.value = a.excerpt || '';
-      bodyField.value = a.body_markdown || '';
+      setBody(a.body_markdown);
       cancelBtn.hidden = false;
       window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
     }
