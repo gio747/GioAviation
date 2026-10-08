@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member area — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .whoami{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font); font-size:0.8125rem; font-weight:600; color:var(--ink-inverse-soft); padding:6px 12px; border:1px solid rgba(255,255,255,.18); border-radius:999px; white-space:nowrap; }
+  .whoami .dot{ width:8px; height:8px; border-radius:50%; background:#5FD39A; flex:none; }
+  .whoami strong{ color:var(--ink-inverse); font-weight:700; }
+  .quick{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .quick a{ display:grid; gap:8px; align-content:start; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:22px; transition:border-color .15s ease, box-shadow .15s ease; }
+  .quick a:hover, .quick a:focus-visible{ border-color:var(--sky); box-shadow:0 4px 14px rgba(12,45,79,.10); }
+  .quick h3{ font-size:1.125rem; }
+  .quick p{ color:var(--ink-soft); font-size:0.9375rem; }
+  .quick .go{ color:var(--sky); font-weight:600; font-size:0.9375rem; }
+  @media (max-width:860px){ .quick{ grid-template-columns:1fr; } .whoami{ display:none; } }
+</style>
+</head>
+<body>
+
+<header class="site over-hero" id="site-header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary" aria-label="Main">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="risorse.html">Resources</a>
+      <a href="articoli.html">Articles</a>
+      <a href="credenziali.html">Credentials</a>
+      <a href="contatti.html">Contact</a>
+      {{ADMIN_LINK}}
+      <span class="whoami" title="You are signed in"><span class="dot" aria-hidden="true"></span>Signed in as <strong>{{NAME}}</strong></span>
+      <a href="/api/logout" class="btn ghost sm">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <div class="wrap">
+      <span class="label" style="color:var(--sky-on-dark)">Member area</span>
+      <h1>Welcome back, {{NAME}}</h1>
+      <p class="lead">You are signed in. Open the library to read and download the documents, or browse the latest articles.</p>
+      <div class="cta-row">
+        <a class="btn" href="risorse.html">Open the library</a>
+        <a class="btn ghost" href="articoli.html">Read the articles</a>
+      </div>
+    </div>
+    <div id="hero-end" aria-hidden="true"></div>
+  </section>
+
+  <section class="block" id="library">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">The library</span>
+        <h2>Your documents</h2>
+        <p>All published documents are available to you. New material is added as it is reviewed.</p>
+      </div>
+      <div class="lib">
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 29</span><span class="chip grey">Mental map</span></div>
+          <h3>Hydraulic power</h3>
+          <p>System architecture, pump logic and the failures that matter, on a single reference.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock">Open →</span></div>
+        </a>
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 24</span><span class="chip grey">Mental map</span></div>
+          <h3>Electrical power</h3>
+          <p>Sources, buses and transfer logic organised for recall on the line.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock">Open →</span></div>
+        </a>
+        <a class="lib-card" href="risorse.html">
+          <div class="chips"><span class="chip">ATA 27</span><span class="chip grey">Mental map</span></div>
+          <h3>Flight controls</h3>
+          <p>Control surfaces, their power sources and the relevant non-normal cases.</p>
+          <div class="meta"><span>Boeing 747-400</span><span class="lock">Open →</span></div>
+        </a>
+      </div>
+      <div class="sec-foot">
+        <span>Technical bulletins and route notes are in preparation.</span>
+        <a class="text-link" href="risorse.html">Open the full library →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">Quick links</span>
+        <h2>Where to go next</h2>
+      </div>
+      <div class="quick">
+        <a href="articoli.html"><h3>Articles</h3><p>Notes on 747-400 operations, written from the line.</p><span class="go">Read articles →</span></a>
+        <a href="credenziali.html"><h3>How this library is built</h3><p>Sources, revisions and the standard behind every document.</p><span class="go">Read more →</span></a>
+        <a href="contatti.html"><h3>Contact</h3><p>Questions, corrections or requests for material.</p><span class="go">Get in touch →</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="risorse.html">Resources</a>
+      <a href="articoli.html">Articles</a>
+      <a href="credenziali.html">Credentials</a>
+      <a href="contatti.html">Contact</a>
+      <a href="/api/logout">Log out</a>
+    </nav>
+    <p class="disclaimer">Study and reference material for training purposes only. It is not approved operational data. Always refer to your operator's approved manuals and procedures. GioAviation.aero is independent and not affiliated with The Boeing Company or any operator.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var hdr = document.getElementById('site-header');
+  var end = document.getElementById('hero-end');
+  if (!hdr || !end || !('IntersectionObserver' in window)) return;
+  new IntersectionObserver(function(entries){
+    var e = entries[0];
+    var past = !e.isIntersecting && e.boundingClientRect.top < hdr.offsetHeight;
+    hdr.classList.toggle('is-scrolled', past);
+    hdr.classList.toggle('over-hero', !past);
+  }, { rootMargin: '-72px 0px 0px 0px' }).observe(end);
+})();
+</script>
+</body>
+</html>
