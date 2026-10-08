@@ -76,6 +76,13 @@ const PUBLIC_PATHS = new Set([
 // until the profile is filled in.
 const PROFILE_EXEMPT_PATHS = new Set(["/profilo.html", "/profilo"]);
 
+// Pages whose content depends on whether the visitor is signed in.
+const HOME_PATHS = new Set(["/", "/index.html", "/index"]);
+const GUEST_ONLY_PATHS = new Set([
+  "/login.html", "/login",
+  "/richiedi-accesso.html", "/richiedi-accesso",
+]);
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -83,6 +90,23 @@ export default {
 
     if (path.startsWith("/api/")) {
       return handleApi(request, env, path, url);
+    }
+
+    // The signed-in home page is a template served in place of "/" — it is
+    // never reachable as a file of its own.
+    if (path === "/home-members.html" || path === "/home-members") {
+      return Response.redirect(new URL("/", url), 302);
+    }
+
+    // A signed-in visitor gets a different home page, and has no use for the
+    // login or request-access pages (they are sent on instead of being asked
+    // to log in again).
+    if (HOME_PATHS.has(path) || GUEST_ONLY_PATHS.has(path)) {
+      const member = await getMember(request, env);
+      if (member) {
+        if (HOME_PATHS.has(path)) return serveMembersHome(request, env, url, member);
+        return Response.redirect(new URL(safeNext(url.searchParams.get("next")), url), 302);
+      }
     }
 
     if (PUBLIC_PATHS.has(path) || path.startsWith("/assets/")) {
@@ -137,6 +161,7 @@ async function handleApi(request, env, path, url) {
   if (path === "/api/login" && method === "POST") return apiLogin(request, env);
   if (path === "/api/logout") return apiLogout();
   if (path === "/api/activate" && method === "POST") return apiActivate(request, env);
+  if (path === "/api/me" && method === "GET") return apiMe(request, env);
 
   if (path === "/api/admin/login" && method === "POST") return apiAdminLogin(request, env);
   if (path === "/api/admin/logout") return apiLogout();
@@ -244,6 +269,87 @@ async function apiLogin(request, env) {
   });
 
   return json({ ok: true }, 200, { "Set-Cookie": cookie });
+}
+
+// ------------------------------------------------------- signed-in visitor --
+// Who is looking at the site right now. Used by the home page (server-side)
+// and by the public pages' header (GET /api/me). A session cookie that points
+// to a pilot who no longer exists, or is no longer approved, counts as "not
+// signed in".
+
+async function getMember(request, env) {
+  let session = null;
+  try {
+    session = await getSession(request, env);
+  } catch (e) {
+    return null;
+  }
+  if (!session) return null;
+
+  if (session.role === "admin") return { role: "admin", name: "Admin", needsProfile: false };
+  if (session.role !== "pilot" || !env.DB) return null;
+
+  const pilot = await env.DB.prepare(
+    "SELECT first_name, last_name, full_name, email, status, profile_completed FROM pilots WHERE id = ?"
+  ).bind(session.id).first();
+  if (!pilot || pilot.status !== "approved") return null;
+
+  const name = [pilot.first_name, pilot.last_name].filter(Boolean).join(" ") || pilot.full_name || pilot.email;
+  return { role: "pilot", name, needsProfile: !pilot.profile_completed };
+}
+
+async function apiMe(request, env) {
+  const member = await getMember(request, env);
+  const headers = { "Cache-Control": "private, no-store" };
+  if (!member) return json({ ok: true, loggedIn: false }, 200, headers);
+  return json({ ok: true, loggedIn: true, role: member.role, name: member.name }, 200, headers);
+}
+
+// Only same-site absolute paths are accepted as a redirect target.
+function safeNext(next) {
+  if (typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")) {
+    return next;
+  }
+  return "/";
+}
+
+// Reads a static asset through the ASSETS binding, following the
+// "/foo.html" -> "/foo" normalisation redirect, without the visitor's
+// conditional-request headers (so a cached copy of another page can never
+// produce a 304 for this one).
+async function fetchAsset(env, request, url, assetPath) {
+  const headers = new Headers(request.headers);
+  headers.delete("If-None-Match");
+  headers.delete("If-Modified-Since");
+  let target = new URL(assetPath, url);
+  for (let i = 0; i < 3; i++) {
+    const res = await env.ASSETS.fetch(new Request(target, { method: "GET", headers }));
+    const location = res.headers.get("Location");
+    if (res.status >= 300 && res.status < 400 && location) {
+      target = new URL(location, target);
+      continue;
+    }
+    return res;
+  }
+  return new Response(null, { status: 508 });
+}
+
+async function serveMembersHome(request, env, url, member) {
+  // A pilot who has not completed the mandatory profile is sent there first,
+  // exactly as for every other members page.
+  if (member.needsProfile) return Response.redirect(new URL("/profilo.html", url), 302);
+
+  const res = await fetchAsset(env, request, url, "/home-members");
+  if (!res.ok) return env.ASSETS.fetch(request); // template missing: fall back to the normal home
+
+  const html = (await res.text())
+    .replaceAll("{{NAME}}", escapeHtml(member.name))
+    .replaceAll("{{ADMIN_LINK}}", member.role === "admin" ? '<a href="admin.html">Admin</a>' : "");
+
+  return new Response(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" },
+  });
 }
 
 function apiLogout() {
