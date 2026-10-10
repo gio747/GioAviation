@@ -97,6 +97,20 @@
     </div>
   </section>
 
+  <section class="block" id="articles" hidden>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label" style="color:var(--sky)">Articles</span>
+        <h2>Latest articles</h2>
+        <p>Open articles and members-only articles, newest first.</p>
+      </div>
+      <div id="latest-articles" class="article-grid"></div>
+      <div class="sec-foot">
+        <a class="text-link" href="articoli.html">All articles →</a>
+      </div>
+    </div>
+  </section>
+
   <section class="block">
     <div class="wrap">
       <div class="sec-head">
@@ -141,6 +155,41 @@
     hdr.classList.toggle('is-scrolled', past);
     hdr.classList.toggle('over-hero', !past);
   }, { rootMargin: '-72px 0px 0px 0px' }).observe(end);
+})();
+</script>
+<script>
+// Latest articles: titles come from the API, newest first.
+// The section stays hidden when there are no published articles or the call fails.
+(function(){
+  var MAX = 3;
+  var sec = document.getElementById('articles');
+  var grid = document.getElementById('latest-articles');
+  if (!sec || !grid) return;
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function fmt(iso){
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+  }
+  var LOCK = '<span class="lock"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Members</span>';
+  fetch('/api/articles', { credentials: 'same-origin' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data || !data.ok || !data.articles || !data.articles.length) return;
+      grid.innerHTML = data.articles.slice(0, MAX).map(function(a){
+        return '<a class="article-card" href="articolo.html?slug=' + encodeURIComponent(a.slug) + '">' +
+          (a.category_name ? '<span class="badge-cat" style="align-self:flex-start;">' + esc(a.category_name) + '</span>' : '') +
+          '<h3>' + esc(a.title) + '</h3>' +
+          (a.excerpt ? '<p>' + esc(a.excerpt) + '</p>' : '') +
+          '<span class="meta"><span>' + fmt(a.published_at) + '</span>' + (a.access === 'members' ? LOCK : '') + '</span>' +
+          '</a>';
+      }).join('');
+      sec.hidden = false;
+    })
+    .catch(function(){});
 })();
 </script>
 </body>
