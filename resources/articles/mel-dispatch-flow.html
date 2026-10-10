@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>747-400 MEL / DDP Dispatch Decision Flow — GioAviation.aero</title>
+<meta name="description" content="The sequence from an EICAS alert, status message or inoperative item to a dispatch decision, built from the AAI combined MEL/DDP and the OM-A deferral procedure.">
+<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* Palette and type follow the site stylesheet (Direction A "Flight Level"). */
+  :root{
+    --navy:#0C2D4F; --navy-deep:#071A2E; --sky:#1B6FB0; --sky-on-dark:#7CC3F2;
+    --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF3F9; --tint-strong:#E1ECF6;
+    --ink:#0E1B2A; --ink-soft:#3D4E62; --ink-faint:#627286;
+    --border:#DDE5EE; --border-strong:#B7C6D6;
+    --spine:var(--navy); --accent:var(--sky); --accent-soft:var(--surface-2);
+    --green:#1F7A4D; --green-bg:#E6F3EC; --green-border:#86C2A2;
+    --amber:#9A5B12; --amber-bg:#FBF0DC; --amber-border:#DDB46A;
+    --red:#B3261E; --red-bg:#FBEBE9; --red-border:#E0968F;
+    --neutral-bg:#FFFFFF; --neutral-border:#8696AA;
+    --font:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --head-stretch:87.5%;
+    --radius:6px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; text-decoration:none; }
+
+  /* site header and footer */
+  .site-head{ background:var(--navy-deep); border-bottom:1px solid #16324F; padding-block:12px; }
+  .site-head .in{ max-width:1180px; margin:0 auto; padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px)); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .logo{ display:flex; align-items:center; gap:10px; }
+  .logo img{ display:block; height:40px; width:40px; }
+  .logo .name{ font-family:var(--font); font-stretch:var(--head-stretch); font-weight:800; font-size:1.3125rem; letter-spacing:-0.015em; color:#fff; white-space:nowrap; }
+  .logo .name b{ color:var(--sky-on-dark); font-weight:600; font-size:0.8em; }
+  .site-head nav{ display:flex; gap:26px; align-items:center; }
+  .site-head nav a{ font-weight:600; font-size:0.9375rem; color:#C9D6E3; }
+  .site-head nav a:hover, .site-head nav a:focus-visible{ color:var(--sky-on-dark); }
+  .site-foot{ background:var(--navy-deep); margin-top:40px; }
+  .site-foot .in{ max-width:1180px; margin:0 auto; padding:24px max(20px,env(safe-area-inset-left,0px)); display:flex; flex-wrap:wrap; gap:10px 24px; justify-content:space-between; font-size:0.875rem; color:#8FA3B8; }
+  .site-foot a{ color:#C9D6E3; font-weight:600; }
+  .site-foot a:hover, .site-foot a:focus-visible{ color:var(--sky-on-dark); }
+
+  .page{ max-width:1180px; margin:0 auto; padding:40px 24px 8px; }
+  .masthead{ display:flex; flex-direction:column; gap:6px; padding-bottom:20px; border-bottom:2px solid var(--navy); margin-bottom:24px; }
+  .eyebrow{ font-size:0.75rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--sky); }
+  h1{ font-family:var(--font); font-stretch:var(--head-stretch); font-weight:750; font-size:clamp(1.75rem,4vw,2.5rem); line-height:1.1; letter-spacing:-0.005em; text-wrap:balance; margin:2px 0 0; color:var(--navy); }
+  .dek{ font-size:1.0625rem; color:var(--ink-soft); max-width:72ch; margin:6px 0 0; }
+  .source-line{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-faint); margin-top:8px; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:10px 24px; margin-bottom:24px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+  .legend-item{ display:flex; align-items:center; gap:8px; font-size:0.8125rem; color:var(--ink-soft); }
+  .legend-shape{ width:22px; height:14px; flex:none; border:1.5px solid var(--border-strong); }
+  .legend-shape.diamond{ background:var(--neutral-border); border:none; clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); }
+  .legend-shape.rect{ background:var(--neutral-bg); border-color:var(--neutral-border); border-radius:2px; }
+  .legend-shape.terminal{ border-radius:8px; background:var(--surface-2); border-color:var(--navy); }
+  .legend-shape.green{ background:var(--green-bg); border-color:var(--green-border); }
+  .legend-shape.amber{ background:var(--amber-bg); border-color:var(--amber-border); }
+  .legend-shape.red{ background:var(--red-bg); border-color:var(--red-border); }
+
+  .chart-wrap{ overflow-x:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px; margin-bottom:8px; }
+  .chart-wrap svg{ display:block; width:100%; height:auto; min-width:760px; }
+
+  svg text{ font-family:var(--font); }
+  .shape-fill{ fill:var(--neutral-bg); }
+  .shape-stroke{ stroke:var(--neutral-border); stroke-width:2; }
+  .shape-text{ fill:var(--ink); font-size:14px; font-weight:600; text-anchor:middle; }
+  .terminal-fill{ fill:var(--surface-2); }
+  .terminal-stroke{ stroke:var(--navy); stroke-width:2; }
+  .terminal-text{ fill:var(--ink); font-size:13.5px; font-weight:600; text-anchor:middle; }
+
+  .node-green rect{ fill:var(--green-bg); stroke:var(--green-border); stroke-width:2; }
+  .node-red rect{ fill:var(--red-bg); stroke:var(--red-border); stroke-width:2; }
+  .node-amber rect{ fill:var(--amber-bg); stroke:var(--amber-border); stroke-width:2; }
+  .node-proc rect{ fill:var(--neutral-bg); stroke:var(--neutral-border); stroke-width:2; }
+  .box-title{ font-weight:700; font-size:14px; }
+  .node-amber .box-title{ fill:var(--amber); }
+  .node-proc .box-title{ fill:var(--navy); }
+  .mono{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12px; }
+  .body-text{ fill:var(--ink); font-size:12.5px; font-weight:400; }
+  .note-text{ fill:var(--ink-soft); font-size:11.5px; font-style:italic; }
+
+  .flow-line{ stroke:var(--ink-faint); stroke-width:2; fill:none; }
+  .flow-line-dashed{ stroke:var(--border-strong); stroke-width:1.5; stroke-dasharray:6 5; fill:none; }
+  .edge-label{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; }
+  .edge-label.yes{ fill:var(--green); }
+  .edge-label.no{ fill:var(--red); }
+  .edge-label.m{ fill:var(--amber); }
+  .edge-label.neutral{ fill:var(--ink-soft); }
+  .divider-label{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; }
+
+  figcaption{ font-size:0.8125rem; color:var(--ink-faint); margin:0 0 24px; }
+
+  .callout{ padding:16px 20px; background:var(--surface-2); border-left:3px solid var(--sky); border-radius:0 var(--radius) var(--radius) 0; }
+  .callout-title{ font-stretch:var(--head-stretch); font-weight:700; font-size:0.8125rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+  .callout p{ margin:0; font-size:0.9375rem; color:var(--ink); max-width:110ch; }
+
+  .footnotes{ margin-top:24px; padding-top:16px; border-top:1px solid var(--border); }
+  .footnotes-title{ font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-faint); margin-bottom:8px; }
+  .footnotes ol{ margin:0; padding-left:18px; font-size:0.875rem; color:var(--ink-soft); }
+  .footnotes li{ margin-bottom:5px; }
+  code{ font-family:'IBM Plex Mono',monospace; font-size:0.92em; background:var(--tint-strong); padding:1px 5px; border-radius:4px; color:var(--ink); }
+  @media print{ .chart-wrap{ overflow:visible; } .site-head, .site-foot{ display:none; } }
+</style>
+</head>
+<body>
+<header class="site-head"><div class="in">
+  <a class="logo" href="/index.html" aria-label="GioAviation.aero — home">
+    <img src="/assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+    <span class="name">GioAviation<b>.aero</b></span>
+  </a>
+  <nav aria-label="Main">
+    <a href="/index.html">Home</a>
+    <a href="/articoli.html">Articles</a>
+  </nav>
+</div></header>
+
+<div class="page">
+
+  <div class="masthead">
+    <div class="eyebrow">Air Atlanta Icelandic · Boeing 747-400 / -400F</div>
+    <h1>MEL / DDP Dispatch Decision Flow</h1>
+    <p class="dek">The sequence the crew works through from an EICAS alert, status message or inoperative item to a dispatch decision, built from the AAI combined MEL/DDP and the OM-A deferral procedure.</p>
+    <p class="source-line">Sources: AAI 747-400 MEL/DDP, Section 1 &amp; Section 2 Introduction (2.00-01-00.7) · OM-A Part A §8.6, pp. 8-53 to 8-54</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-shape terminal"></span> Start / end</div>
+    <div class="legend-item"><span class="legend-shape diamond"></span> Decision</div>
+    <div class="legend-item"><span class="legend-shape rect"></span> Action</div>
+    <div class="legend-item"><span class="legend-shape amber"></span> Deferral of the item</div>
+    <div class="legend-item"><span class="legend-shape terminal green"></span> Continue operation</div>
+    <div class="legend-item"><span class="legend-shape terminal red"></span> Engineering action required</div>
+  </div>
+
+  <figure style="margin:0;">
+  <div class="chart-wrap">
+    <svg viewBox="0 0 1150 1440" role="img" aria-label="Flowchart. From an EICAS alert, status message or inoperative item: if flight-deck configuration or the QRH, an FCOM bulletin or Engineering clears the fault, continue operation. If not, and dispatch is not allowed under the combined MEL/DDP, engineering action is needed before departure. If dispatch is allowed and the item carries an (M) procedure, Certifying Staff accomplishes it and defers the item; otherwise the Commander defers it. For every deferred item, comply with the (O) procedure, observe the repair category and notify Dispatch if the item imposes a limitation, then continue operation.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"></path>
+        </marker>
+      </defs>
+
+      <!-- ============ EDGES (under nodes; every endpoint sits on a shape edge) ============ -->
+      <line x1="550" y1="84"  x2="550" y2="134" class="flow-line" marker-end="url(#arrow)"></line>   <!-- start -> D1 -->
+      <line x1="550" y1="284" x2="550" y2="334" class="flow-line" marker-end="url(#arrow)"></line>   <!-- D1 -> D2 -->
+      <path d="M760,209 H820" class="flow-line" marker-end="url(#arrow)"></path>                       <!-- D1 YES -->
+      <path d="M760,409 H820" class="flow-line" marker-end="url(#arrow)"></path>                       <!-- D2 YES -->
+      <line x1="550" y1="484" x2="550" y2="540" class="flow-line" marker-end="url(#arrow)"></line>   <!-- D2 -> D3 -->
+      <line x1="120" y1="508" x2="1030" y2="508" class="flow-line-dashed"></line>                    <!-- divider -->
+      <path d="M340,615 H280" class="flow-line" marker-end="url(#arrow)"></path>                       <!-- D3 NO -> red -->
+      <line x1="550" y1="690" x2="550" y2="740" class="flow-line" marker-end="url(#arrow)"></line>   <!-- D3 YES -> D4 -->
+      <path d="M760,815 H800" class="flow-line" marker-end="url(#arrow)"></path>                       <!-- D4 YES -> Certifying Staff box -->
+      <line x1="550" y1="890" x2="550" y2="940" class="flow-line" marker-end="url(#arrow)"></line>   <!-- D4 NO -> Commander box -->
+      <path d="M970,885 V1100 H700 V1130" class="flow-line" marker-end="url(#arrow)"></path>          <!-- Cert. Staff box -> common box -->
+      <line x1="550" y1="1070" x2="550" y2="1130" class="flow-line" marker-end="url(#arrow)"></line> <!-- Commander box -> common box -->
+      <line x1="550" y1="1300" x2="550" y2="1350" class="flow-line" marker-end="url(#arrow)"></line> <!-- common box -> final -->
+
+      <!-- edge labels -->
+      <text x="790" y="200" class="edge-label yes" text-anchor="middle">YES</text>
+      <text x="790" y="400" class="edge-label yes" text-anchor="middle">YES</text>
+      <text x="310" y="606" class="edge-label no" text-anchor="middle">NO</text>
+      <text x="562" y="720" class="edge-label yes" text-anchor="start">YES</text>
+      <text x="562" y="520" class="edge-label neutral" text-anchor="start">NO</text>
+      <text x="562" y="320" class="edge-label neutral" text-anchor="start">NO</text>
+      <text x="780" y="806" class="edge-label m" text-anchor="middle">YES</text>
+      <text x="562" y="920" class="edge-label neutral" text-anchor="start">NO</text>
+      <text x="130" y="500" class="divider-label" fill="var(--green)" text-anchor="start">Malfunction resolved ↑</text>
+      <text x="1020" y="524" class="divider-label" fill="var(--red)" text-anchor="end">Malfunction not resolved ↓</text>
+
+      <!-- ============ NODES ============ -->
+
+      <!-- START -->
+      <rect x="270" y="20" width="560" height="64" rx="32" class="terminal-fill terminal-stroke"></rect>
+      <text x="550" y="46" class="terminal-text">EICAS Alert (Warning / Caution / Advisory) or Status</text>
+      <text x="550" y="64" class="terminal-text">Message, or an Inoperative Item recorded in the ATL</text>
+
+      <!-- D1 -->
+      <polygon points="550,134 760,209 550,284 340,209" class="shape-fill shape-stroke"></polygon>
+      <text x="550" y="196" class="shape-text">Flight deck switches, selectors and</text>
+      <text x="550" y="214" class="shape-text">controls configured correctly?</text>
+      <text x="550" y="232" class="shape-text">Malfunction resolved?</text>
+
+      <g class="node-green">
+        <rect x="820" y="177" width="300" height="64" rx="32"></rect>
+        <text x="970" y="214" class="terminal-text" style="fill:var(--green)">CONTINUE OPERATION</text>
+      </g>
+
+      <!-- D2 -->
+      <polygon points="550,334 760,409 550,484 340,409" class="shape-fill shape-stroke"></polygon>
+      <text x="550" y="396" class="shape-text">QRH checklist, FCOM Bulletin or</text>
+      <text x="550" y="414" class="shape-text">Engineering advice clears the fault</text>
+      <text x="550" y="432" class="shape-text">and restores full serviceability?</text>
+
+      <g class="node-green">
+        <rect x="820" y="377" width="300" height="64" rx="32"></rect>
+        <text x="970" y="414" class="terminal-text" style="fill:var(--green)">CONTINUE OPERATION</text>
+      </g>
+
+      <!-- D3 -->
+      <polygon points="550,540 760,615 550,690 340,615" class="shape-fill shape-stroke"></polygon>
+      <text x="550" y="611" class="shape-text">Is dispatch allowed under</text>
+      <text x="550" y="629" class="shape-text">the combined MEL/DDP?</text>
+
+      <g class="node-red">
+        <rect x="20" y="580" width="260" height="70" rx="6"></rect>
+        <text x="150" y="611" class="terminal-text" style="fill:var(--red)">ENGINEERING ACTION</text>
+        <text x="150" y="629" class="terminal-text" style="fill:var(--red)">NEEDED BEFORE DEPARTURE</text>
+      </g>
+
+      <!-- D4 -->
+      <polygon points="550,740 760,815 550,890 340,815" class="shape-fill shape-stroke"></polygon>
+      <text x="550" y="802" class="shape-text">Does the MEL/DDP item carry</text>
+      <text x="550" y="820" class="shape-text">an (M) maintenance procedure</text>
+      <text x="550" y="838" class="shape-text">requirement?</text>
+
+      <!-- (M) YES: Certifying Staff accomplishes (M) and defers -->
+      <g class="node-amber">
+        <rect x="800" y="745" width="340" height="140" rx="6"></rect>
+        <text x="970" y="772" text-anchor="middle" class="box-title">Certifying Staff</text>
+        <text x="970" y="792" text-anchor="middle" class="body-text">accomplishes the (M) procedure</text>
+        <text x="970" y="810" text-anchor="middle" class="body-text">and defers the item:</text>
+        <text x="970" y="832" text-anchor="middle" class="body-text">ATL <tspan class="mono">M-001</tspan> · <tspan class="mono">M-004</tspan> · <tspan class="mono">M-006/M-007</tspan> · <tspan class="mono">M-005</tspan></text>
+        <text x="970" y="866" text-anchor="middle" class="note-text">The Commander may not defer (M) items.</text>
+      </g>
+
+      <!-- (M) NO: Commander defers -->
+      <g class="node-amber">
+        <rect x="320" y="940" width="460" height="130" rx="6"></rect>
+        <text x="550" y="967" text-anchor="middle" class="box-title">Commander defers the item</text>
+        <text x="342" y="993" class="body-text">•  ATL <tspan class="mono">M-001</tspan>, Action column (box 22.6): “item carried in</text>
+        <text x="356" y="1011" class="body-text">accordance with combined MEL/DDP item number …”,</text>
+        <text x="356" y="1029" class="body-text">then date, time (UTC) and Commander’s signature</text>
+        <text x="342" y="1053" class="body-text">•  DMI form <tspan class="mono">M-004</tspan>, DMI Index <tspan class="mono">M-006/M-007</tspan>, sticker <tspan class="mono">M-005</tspan></text>
+      </g>
+
+      <!-- Common: every deferred item -->
+      <g class="node-proc">
+        <rect x="270" y="1130" width="560" height="170" rx="6"></rect>
+        <text x="550" y="1157" text-anchor="middle" class="box-title">Before dispatch, for every deferred item</text>
+        <text x="292" y="1185" class="body-text">•  Comply with the <tspan class="mono">(O)</tspan> procedure, if applicable. The Commander signs for</text>
+        <text x="306" y="1203" class="body-text">all open <tspan class="mono">(O)</tspan> items at aircraft acceptance (<tspan class="mono">M-006/M-007</tspan>, text box 8).</text>
+        <text x="292" y="1229" class="body-text">•  Observe the Repair Category: <tspan class="mono">A</tspan> as specified · <tspan class="mono">B</tspan> 3 days · <tspan class="mono">C</tspan> 10 days · <tspan class="mono">D</tspan> 120 days.</text>
+        <text x="292" y="1255" class="body-text">•  If the item imposes an operational limitation, notify Dispatch:</text>
+        <text x="306" y="1273" class="body-text">ACARS <tspan class="mono">OPEN</tspan> message, or email <tspan class="mono">MEL-CDL@airatlanta.com</tspan>.</text>
+      </g>
+
+      <!-- FINAL -->
+      <g class="node-green">
+        <rect x="360" y="1350" width="380" height="64" rx="32"></rect>
+        <text x="550" y="1387" class="terminal-text" style="fill:var(--green); font-size:15px">CONTINUE OPERATION</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption>Dispatch decision path from EICAS alert, status message or inoperative item to continue operation or engineering hold, per the AAI 747-400 combined MEL/DDP.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <div class="callout-title">Commander's authority</div>
+    <p>MEL/DDP relief is not an obligation to operate. Irrespective of the provisions of the MEL, the Commander is not obliged to operate with a particular defect if, in his opinion, it could adversely affect the safety of the proposed flight. (OM-A Part A §8.6.1)</p>
+  </div>
+
+  <div class="footnotes">
+    <div class="footnotes-title">Notes</div>
+    <ol>
+      <li>A system fault that results only in a CMCS maintenance message does not require MEL/DDP consideration or maintenance action before dispatch. It is handled through the AAI standard maintenance programme.</li>
+      <li>If the crew is not certain whether an alert results from the existing MEL/DDP dispatch configuration, the associated non-normal procedure should be accomplished.</li>
+      <li>The AAI combined MEL/DDP uses only the <code>(M)</code> and <code>(O)</code> procedure symbols defined in the MEL/DDP Introduction.</li>
+      <li>This diagram is a study aid. It does not replace the current combined MEL/DDP, OM-A or CAME. Always work from the effective revision.</li>
+    </ol>
+  </div>
+
+</div>
+
+<footer class="site-foot"><div class="in">
+  <span>&copy; 2026 GioAviation.aero</span>
+  <span><a href="/articoli.html">All articles</a> &middot; <a href="/index.html">Home</a></span>
+</div></footer>
+</body>
+</html>

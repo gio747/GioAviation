@@ -74,6 +74,7 @@
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
+  var LOCK = '<span class="lock"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Members</span>';
   function formatDate(iso){
     if (!iso) return '';
     var d = new Date(iso);
@@ -97,7 +98,7 @@
           (a.category_name ? '<span class="badge-cat" style="align-self:flex-start;">' + esc(a.category_name) + '</span>' : '') +
           '<h3>' + esc(a.title) + '</h3>' +
           (a.excerpt ? '<p>' + esc(a.excerpt) + '</p>' : '') +
-          '<span class="meta">' + formatDate(a.published_at) + '</span>' +
+          '<span class="meta"><span>' + formatDate(a.published_at) + '</span>' + (a.access === 'members' ? LOCK : '') + '</span>' +
           '</a>';
       }).join('');
     })

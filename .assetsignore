@@ -9,5 +9,6 @@ src/
 wrangler.jsonc
 schema.sql
 migration-002-backend.sql
+migration-003-article-access.sql
 README.md
 README-DEPLOY.md

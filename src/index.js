@@ -593,18 +593,35 @@ async function apiArticlesPublicList(request, env, url) {
   if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
   const slug = url.searchParams.get("slug");
 
+  // Articles carry an `access` flag: 'public' (anyone) or 'members' (approved
+  // pilots with a completed profile, or the admin). Members-only articles
+  // stay listed — title, category and date are a shop window — but their
+  // excerpt and body are only ever sent to a member.
+  const member = !!(await requirePilotWithProfile(request, env));
+
   if (slug) {
     const article = await env.DB.prepare(
-      `SELECT a.id, a.slug, a.title, a.excerpt, a.body_markdown, a.published_at, c.name AS category_name, c.slug AS category_slug
+      `SELECT a.id, a.slug, a.title, a.excerpt, a.body_markdown, a.access, a.published_at, c.name AS category_name, c.slug AS category_slug
        FROM articles a LEFT JOIN categories c ON c.id = a.category_id
        WHERE a.slug = ? AND a.status = 'published'`
     ).bind(slug).first();
     if (!article) return json({ ok: false, error: "not_found" }, 404);
+    if (article.access === "members" && !member) {
+      return json({
+        ok: false,
+        error: "members_only",
+        article: {
+          slug: article.slug, title: article.title, access: "members",
+          published_at: article.published_at,
+          category_name: article.category_name, category_slug: article.category_slug,
+        },
+      }, 401);
+    }
     return json({ ok: true, article });
   }
 
   const categorySlug = url.searchParams.get("category");
-  let query = `SELECT a.id, a.slug, a.title, a.excerpt, a.published_at, c.name AS category_name, c.slug AS category_slug
+  let query = `SELECT a.id, a.slug, a.title, a.excerpt, a.access, a.published_at, c.name AS category_name, c.slug AS category_slug
                FROM articles a LEFT JOIN categories c ON c.id = a.category_id
                WHERE a.status = 'published'`;
   const params = [];
@@ -615,7 +632,8 @@ async function apiArticlesPublicList(request, env, url) {
   query += " ORDER BY a.published_at DESC";
 
   const { results } = await env.DB.prepare(query).bind(...params).all();
-  return json({ ok: true, articles: results });
+  const articles = results.map((a) => (a.access === "members" && !member ? { ...a, excerpt: null } : a));
+  return json({ ok: true, articles });
 }
 
 async function apiAdminArticlesList(request, env) {
@@ -627,7 +645,7 @@ async function apiAdminArticlesList(request, env) {
   // admin editor can always reload a draft's full text without a second
   // endpoint.
   const { results } = await env.DB.prepare(
-    `SELECT a.id, a.slug, a.title, a.excerpt, a.body_markdown, a.status, a.created_at, a.updated_at, a.published_at,
+    `SELECT a.id, a.slug, a.title, a.excerpt, a.body_markdown, a.status, a.access, a.created_at, a.updated_at, a.published_at,
             a.category_id, c.name AS category_name
      FROM articles a LEFT JOIN categories c ON c.id = a.category_id
      ORDER BY a.updated_at DESC`
@@ -646,6 +664,7 @@ async function apiAdminArticleSave(request, env) {
   const bodyMarkdown = String(body.body_markdown || "");
   const excerpt = String(body.excerpt || "").trim() || null;
   const status = body.status === "published" ? "published" : "draft";
+  const access = body.access === "members" ? "members" : "public";
   const categoryId = body.category_id ? Number(body.category_id) : null;
   let slug = String(body.slug || "").trim();
 
@@ -667,16 +686,16 @@ async function apiAdminArticleSave(request, env) {
     if (!existing) return json({ ok: false, error: "not_found" }, 404);
     const publishedAt = status === "published" ? (existing.published_at || now) : existing.published_at;
     await env.DB.prepare(
-      `UPDATE articles SET category_id=?, slug=?, title=?, excerpt=?, body_markdown=?, status=?, updated_at=?, published_at=? WHERE id=?`
-    ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, now, publishedAt, id).run();
+      `UPDATE articles SET category_id=?, slug=?, title=?, excerpt=?, body_markdown=?, status=?, access=?, updated_at=?, published_at=? WHERE id=?`
+    ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, access, now, publishedAt, id).run();
     return json({ ok: true, id });
   }
 
   const publishedAt = status === "published" ? now : null;
   const result = await env.DB.prepare(
-    `INSERT INTO articles (category_id, slug, title, excerpt, body_markdown, status, created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, now, now, publishedAt).run();
+    `INSERT INTO articles (category_id, slug, title, excerpt, body_markdown, status, access, created_at, updated_at, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, access, now, now, publishedAt).run();
   return json({ ok: true, id: result.meta.last_row_id });
 }
 

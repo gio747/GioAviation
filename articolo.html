@@ -126,6 +126,34 @@
   fetch('/api/articles?slug=' + encodeURIComponent(slug))
     .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
     .then(function(r){
+      if (r.data && r.data.error === 'members_only' && r.data.article){
+        // Members-only article, visitor not logged in: title and category only.
+        var m = r.data.article;
+        document.getElementById('page-title').textContent = m.title + ' — GioAviation.aero';
+        titleEl.textContent = m.title;
+        if (m.category_name){
+          catEl.textContent = m.category_name;
+          catEl.style.display = 'inline-block';
+        }
+        if (m.published_at){
+          var md = new Date(m.published_at);
+          metaEl.textContent = isNaN(md) ? '' : md.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+        }
+        var next = encodeURIComponent(location.pathname + location.search);
+        bodyEl.innerHTML =
+          '<div class="members-gate" style="border:1px solid var(--line); border-radius:var(--radius); background:var(--paper); padding:24px;">' +
+            '<p style="display:flex; align-items:center; gap:8px; font-weight:700; color:var(--navy);">' +
+              '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' +
+              'This article is for approved members' +
+            '</p>' +
+            '<p style="margin-top:8px; color:var(--ink-soft);">Log in to read it. Access is granted after a personal review, with a reply within 48 hours.</p>' +
+            '<div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap;">' +
+              '<a class="btn" href="login.html?next=' + next + '">Log in</a>' +
+              '<a class="btn ghost" href="richiedi-accesso.html">Request access</a>' +
+            '</div>' +
+          '</div>';
+        return;
+      }
       if (!r.ok || !r.data.ok){
         titleEl.textContent = 'Article not found';
         status.className = 'form-status err';

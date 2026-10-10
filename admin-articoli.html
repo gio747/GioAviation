@@ -57,7 +57,7 @@
           <label for="art-title">Title</label>
           <input type="text" id="art-title" required>
         </div>
-        <div class="row3">
+        <div class="row3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
           <div class="field">
             <label for="art-slug">URL slug <span style="font-weight:400; color:var(--grey);">(leave blank to auto-generate)</span></label>
             <input type="text" id="art-slug" placeholder="e.g. reading-the-hydraulic-schematic">
@@ -75,6 +75,13 @@
             <select id="art-status">
               <option value="draft">Draft</option>
               <option value="published">Published</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="art-access">Access</label>
+            <select id="art-access">
+              <option value="public">Public — anyone can read</option>
+              <option value="members">Members only — login required</option>
             </select>
           </div>
         </div>
@@ -182,6 +189,7 @@
   var catHint = document.getElementById('cat-hint');
   var catNew = document.getElementById('cat-new');
   var statusField = document.getElementById('art-status');
+  var accessField = document.getElementById('art-access');
   var excerptField = document.getElementById('art-excerpt');
   var editor = document.getElementById('art-body');
   var blockSel = document.getElementById('rte-block');
@@ -416,7 +424,8 @@
     return '<div class="art-row">' +
       '<div><div class="name">' + esc(a.title) + '</div><div class="muted">/' + esc(a.slug) + '</div></div>' +
       '<div class="muted">' + esc(a.category_name || '—') + '</div>' +
-      '<div><span class="pill ' + a.status + '">' + esc(a.status) + '</span></div>' +
+      '<div><span class="pill ' + a.status + '">' + esc(a.status) + '</span>' +
+        (a.access === 'members' ? ' <span class="chip grey" title="Visible to approved members only">Members</span>' : '') + '</div>' +
       '<div class="actions">' +
         '<button type="button" data-action="edit" data-id="' + a.id + '">Edit</button>' +
         (a.status === 'published' ? '<button type="button" data-action="view" data-slug="' + esc(a.slug) + '">View</button>' : '') +
@@ -458,6 +467,7 @@
       slug: slugField.value.trim(),
       category_id: categoryField.value || null,
       status: statusField.value,
+      access: accessField.value,
       excerpt: excerptField.value.trim(),
       body_markdown: getBody()
     };
@@ -506,6 +516,7 @@
       slugField.value = a.slug;
       categoryField.value = a.category_id || '';
       statusField.value = a.status;
+      accessField.value = a.access === 'members' ? 'members' : 'public';
       excerptField.value = a.excerpt || '';
       setBody(a.body_markdown);
       cancelBtn.hidden = false;
