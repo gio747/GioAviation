@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>747-400 MEL / DDP Dispatch Decision Flow — GioAviation.aero</title>
-<meta name="description" content="The sequence from an EICAS alert, status message or inoperative item to a dispatch decision, built from the AAI combined MEL/DDP and the OM-A deferral procedure.">
+<meta name="description" content="The sequence from an EICAS alert, status message or inoperative item to a dispatch decision, built from the operator's combined MEL/DDP and the deferral procedure in the Operations Manual.">
 <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/img/favicon-32.png" sizes="32x32">
 <link rel="icon" type="image/png" href="/assets/img/favicon-16.png" sizes="16x16">
@@ -127,10 +127,10 @@
 <div class="page">
 
   <div class="masthead">
-    <div class="eyebrow">Air Atlanta Icelandic · Boeing 747-400 / -400F</div>
+    <div class="eyebrow">Boeing 747-400 / -400F</div>
     <h1>MEL / DDP Dispatch Decision Flow</h1>
-    <p class="dek">The sequence the crew works through from an EICAS alert, status message or inoperative item to a dispatch decision, built from the AAI combined MEL/DDP and the OM-A deferral procedure.</p>
-    <p class="source-line">Sources: AAI 747-400 MEL/DDP, Section 1 &amp; Section 2 Introduction (2.00-01-00.7) · OM-A Part A §8.6, pp. 8-53 to 8-54</p>
+    <p class="dek">The sequence the crew works through from an EICAS alert, status message or inoperative item to a dispatch decision, built from the operator's combined MEL/DDP and the deferral procedure in the Operations Manual.</p>
+    <p class="source-line">Basis: the operator's 747-400 combined MEL/DDP (introduction) and the deferral procedure in the Operations Manual.</p>
   </div>
 
   <div class="legend">
@@ -230,7 +230,7 @@
         <text x="970" y="772" text-anchor="middle" class="box-title">Certifying Staff</text>
         <text x="970" y="792" text-anchor="middle" class="body-text">accomplishes the (M) procedure</text>
         <text x="970" y="810" text-anchor="middle" class="body-text">and defers the item:</text>
-        <text x="970" y="832" text-anchor="middle" class="body-text">ATL <tspan class="mono">M-001</tspan> · <tspan class="mono">M-004</tspan> · <tspan class="mono">M-006/M-007</tspan> · <tspan class="mono">M-005</tspan></text>
+        <text x="970" y="832" text-anchor="middle" class="body-text">Tech log · DMI form · DMI index · sticker</text>
         <text x="970" y="866" text-anchor="middle" class="note-text">The Commander may not defer (M) items.</text>
       </g>
 
@@ -238,10 +238,10 @@
       <g class="node-amber">
         <rect x="320" y="940" width="460" height="130" rx="6"></rect>
         <text x="550" y="967" text-anchor="middle" class="box-title">Commander defers the item</text>
-        <text x="342" y="993" class="body-text">•  ATL <tspan class="mono">M-001</tspan>, Action column (box 22.6): “item carried in</text>
+        <text x="342" y="993" class="body-text">•  Tech log, Action column: “item carried in</text>
         <text x="356" y="1011" class="body-text">accordance with combined MEL/DDP item number …”,</text>
         <text x="356" y="1029" class="body-text">then date, time (UTC) and Commander’s signature</text>
-        <text x="342" y="1053" class="body-text">•  DMI form <tspan class="mono">M-004</tspan>, DMI Index <tspan class="mono">M-006/M-007</tspan>, sticker <tspan class="mono">M-005</tspan></text>
+        <text x="342" y="1053" class="body-text">•  DMI form, DMI index, sticker</text>
       </g>
 
       <!-- Common: every deferred item -->
@@ -249,10 +249,10 @@
         <rect x="270" y="1130" width="560" height="170" rx="6"></rect>
         <text x="550" y="1157" text-anchor="middle" class="box-title">Before dispatch, for every deferred item</text>
         <text x="292" y="1185" class="body-text">•  Comply with the <tspan class="mono">(O)</tspan> procedure, if applicable. The Commander signs for</text>
-        <text x="306" y="1203" class="body-text">all open <tspan class="mono">(O)</tspan> items at aircraft acceptance (<tspan class="mono">M-006/M-007</tspan>, text box 8).</text>
+        <text x="306" y="1203" class="body-text">all open <tspan class="mono">(O)</tspan> items at aircraft acceptance (DMI index).</text>
         <text x="292" y="1229" class="body-text">•  Observe the Repair Category: <tspan class="mono">A</tspan> as specified · <tspan class="mono">B</tspan> 3 days · <tspan class="mono">C</tspan> 10 days · <tspan class="mono">D</tspan> 120 days.</text>
         <text x="292" y="1255" class="body-text">•  If the item imposes an operational limitation, notify Dispatch:</text>
-        <text x="306" y="1273" class="body-text">ACARS <tspan class="mono">OPEN</tspan> message, or email <tspan class="mono">MEL-CDL@airatlanta.com</tspan>.</text>
+        <text x="306" y="1273" class="body-text">ACARS <tspan class="mono">OPEN</tspan> message, or email Engineering.</text>
       </g>
 
       <!-- FINAL -->
@@ -262,21 +262,21 @@
       </g>
     </svg>
   </div>
-  <figcaption>Dispatch decision path from EICAS alert, status message or inoperative item to continue operation or engineering hold, per the AAI 747-400 combined MEL/DDP.</figcaption>
+  <figcaption>Dispatch decision path from EICAS alert, status message or inoperative item to continue operation or engineering hold, per the operator's 747-400 combined MEL/DDP.</figcaption>
   </figure>
 
   <div class="callout">
     <div class="callout-title">Commander's authority</div>
-    <p>MEL/DDP relief is not an obligation to operate. Irrespective of the provisions of the MEL, the Commander is not obliged to operate with a particular defect if, in his opinion, it could adversely affect the safety of the proposed flight. (OM-A Part A §8.6.1)</p>
+    <p>MEL/DDP relief is not an obligation to operate. Irrespective of the provisions of the MEL, the Commander is not obliged to operate with a particular defect if, in his opinion, it could adversely affect the safety of the proposed flight.</p>
   </div>
 
   <div class="footnotes">
     <div class="footnotes-title">Notes</div>
     <ol>
-      <li>A system fault that results only in a CMCS maintenance message does not require MEL/DDP consideration or maintenance action before dispatch. It is handled through the AAI standard maintenance programme.</li>
+      <li>A system fault that results only in a CMCS maintenance message does not require MEL/DDP consideration or maintenance action before dispatch. It is handled through the operator's standard maintenance programme.</li>
       <li>If the crew is not certain whether an alert results from the existing MEL/DDP dispatch configuration, the associated non-normal procedure should be accomplished.</li>
-      <li>The AAI combined MEL/DDP uses only the <code>(M)</code> and <code>(O)</code> procedure symbols defined in the MEL/DDP Introduction.</li>
-      <li>This diagram is a study aid. It does not replace the current combined MEL/DDP, OM-A or CAME. Always work from the effective revision.</li>
+      <li>The combined MEL/DDP uses only the <code>(M)</code> and <code>(O)</code> procedure symbols defined in the MEL/DDP Introduction.</li>
+      <li>This diagram is a study aid. It does not replace the current MEL/DDP, Operations Manual or maintenance exposition. Always work from the effective revision.</li>
     </ol>
   </div>
 
