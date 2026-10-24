@@ -28,6 +28,13 @@
   .notify{ display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; }
   .notify h3{ font-size:1.0625rem; margin-bottom:4px; }
   .notify p{ color:var(--ink-soft); font-size:0.9375rem; max-width:60ch; }
+  .nbanner{ background:var(--paper); border-bottom:1px solid var(--line); }
+  .nbanner .wrap{ display:flex; gap:16px 24px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding-block:16px; }
+  .nbanner h3{ font-size:1rem; margin-bottom:2px; }
+  .nbanner p{ color:var(--ink-soft); font-size:0.9375rem; max-width:62ch; }
+  .nbanner p a{ color:var(--sky); text-decoration:underline; }
+  .nbanner .acts{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .nbanner[hidden]{ display:none; }
   @media (max-width:860px){ .quick{ grid-template-columns:1fr; } .whoami{ display:none; } }
 </style>
 </head>
@@ -65,6 +72,19 @@
     </div>
     <div id="hero-end" aria-hidden="true"></div>
   </section>
+
+  <aside class="nbanner" id="nbanner" aria-label="Email notifications" hidden>
+    <div class="wrap">
+      <div>
+        <h3 id="nb-title">New: get an email when something is published</h3>
+        <p id="nb-text">One email for each new article or document. Nothing else, and you can turn it off at any time. <a href="privacy.html">Privacy policy</a></p>
+      </div>
+      <div class="acts" id="nb-acts">
+        <button type="button" class="btn sm" id="nb-on">Turn on</button>
+        <button type="button" class="btn ghost sm" id="nb-off" style="color:var(--navy); border-color:var(--line);">Not now</button>
+      </div>
+    </div>
+  </aside>
 
   <section class="block" id="library">
     <div class="wrap">
@@ -166,6 +186,60 @@
     hdr.classList.toggle('is-scrolled', past);
     hdr.classList.toggle('over-hero', !past);
   }, { rootMargin: '-72px 0px 0px 0px' }).observe(end);
+})();
+</script>
+<script>
+// Notification banner: shown only to signed-in pilots who are not subscribed
+// and have not dismissed it. Subscribing needs an explicit click on "Turn on".
+(function(){
+  var KEY = 'ga_nbanner_dismissed';
+  var box = document.getElementById('nbanner');
+  if (!box) return;
+  try { if (localStorage.getItem(KEY) === '1') return; } catch (e) {}
+  var on = document.getElementById('nb-on');
+  var off = document.getElementById('nb-off');
+  var title = document.getElementById('nb-title');
+  var text = document.getElementById('nb-text');
+  var acts = document.getElementById('nb-acts');
+  function done(h, t){
+    title.textContent = h;
+    text.textContent = t;
+    acts.hidden = true;
+  }
+  fetch('/api/newsletter/preferences', { credentials: 'same-origin', cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || !d.ok || d.subscribed) return;
+      box.hidden = false;
+    })
+    .catch(function(){});
+  off.addEventListener('click', function(){
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    box.hidden = true;
+  });
+  on.addEventListener('click', function(){
+    on.disabled = true;
+    fetch('/api/newsletter/preferences', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscribed: true })
+    })
+      .then(function(r){ return r.json().then(function(d){ return { ok: r.ok && d && d.ok }; }); })
+      .then(function(res){
+        if (res.ok){
+          done('You are subscribed.', 'You will get one email for each new article or document. You can change this in Manage notifications below.');
+        } else {
+          on.disabled = false;
+          title.textContent = 'Could not save';
+          text.textContent = 'Please try again, or use Manage notifications at the bottom of this page.';
+        }
+      })
+      .catch(function(){
+        on.disabled = false;
+        title.textContent = 'Connection problem';
+        text.textContent = 'Please try again in a moment.';
+      });
+  });
 })();
 </script>
 <script>
