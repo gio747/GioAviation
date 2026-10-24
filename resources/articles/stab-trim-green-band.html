@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>747-400F Stabilizer Trim and Green Band | GioAviation</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0C2D4F; --navy-d:#071A2E; --navy-m:#1A4A78;
+  --blue:#1B6FB0; --blue-l:#7CC3F2;
+  --gold:#E0A93B; --gold-t:#0B1F36;
+  --bg:#F5F7FA; --card:#FFFFFF; --line:#DDE5EE;
+  --t1:#0E1B2A; --t2:#3D4E62; --t3:#627286;
+  --caution:#9A5B12;
+  --green:#2E9E6B; --green-bg:#E3F4EC;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--t1);font-family:'Archivo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-stretch:87.5%;letter-spacing:-.01em;line-height:1.15;margin:0}
+a{color:var(--blue)}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+/* top bar */
+.topbar{background:var(--navy-d);color:#C9D6E3;font-size:14px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:56px}
+.topbar a{color:#fff;text-decoration:none;font-weight:600;font-stretch:87.5%;letter-spacing:.02em}
+.topbar a span{color:var(--gold)}
+.topbar .back{color:#C9D6E3;font-weight:500}
+.topbar .back:hover{color:#fff}
+
+/* hero */
+.hero{position:relative;color:#fff;background:linear-gradient(180deg,#071A2E 0%,#0C2D4F 55%,#1A4A78 100%);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 110%,rgba(224,169,59,.20),transparent 70%)}
+.hero .wrap{position:relative;padding-top:72px;padding-bottom:84px}
+.eyebrow{display:inline-flex;gap:10px;align-items:center;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--blue-l)}
+.eyebrow i{display:block;width:28px;height:2px;background:var(--gold)}
+.hero h1{font-size:clamp(34px,6vw,58px);font-weight:800;margin:18px 0 18px;max-width:16ch}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.lead{max-width:60ch;font-size:19px;color:#C9D6E3;margin:0 0 28px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font-size:13px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.22);color:#C9D6E3;font-weight:500}
+.chip.lock{background:var(--gold);border-color:var(--gold);color:var(--gold-t);font-weight:700}
+
+/* toc */
+.toc{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px}
+.toc a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;color:var(--t2);padding:6px 12px;border-radius:4px}
+.toc a:hover{background:var(--bg);color:var(--navy)}
+
+/* sections */
+section{padding:64px 0 8px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+.sec-head .n{font-stretch:75%;font-weight:800;font-size:15px;color:var(--gold);letter-spacing:.1em}
+.sec-head h2{font-size:clamp(26px,4vw,36px);font-weight:700;color:var(--navy)}
+h3{font-size:21px;font-weight:700;color:var(--navy);margin:34px 0 10px}
+p{margin:0 0 16px;color:var(--t2)}
+strong{color:var(--t1)}
+.part{font-stretch:75%;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--blue);margin:0 0 8px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:26px 28px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+
+.method{border-left:4px solid var(--blue);}
+.method b{display:block;font-stretch:87.5%;font-size:17px;color:var(--navy);margin-bottom:4px}
+.method p{margin:0;font-size:15.5px}
+.method.alt{border-left-color:var(--gold)}
+
+.callout{border-radius:6px;padding:20px 24px;margin:22px 0;background:#FFF7E6;border:1px solid #F1D9A5;color:#5b4310}
+.callout strong{color:#3b2a06}
+.callout.blue{background:#EAF3FB;border-color:#C5DDF0;color:#1d3d5a}
+.callout.blue strong{color:#0C2D4F}
+
+.flow{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.flow .step{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--line)}
+.flow .step:last-child{border:0}
+.flow .k{flex:0 0 150px;font-stretch:87.5%;font-weight:700;color:var(--navy)}
+.flow .v{color:var(--t2)}
+@media(max-width:600px){.flow .step{flex-direction:column;gap:2px}.flow .k{flex:none}}
+
+/* band diagram */
+.diagram{background:linear-gradient(180deg,#0A2340,#0C2D4F);border-radius:8px;padding:28px 22px 18px;color:#fff;box-shadow:0 12px 34px -16px rgba(7,26,46,.55)}
+.diagram h3{color:#fff;margin:0 0 4px;font-size:20px}
+.diagram .sub{color:#8FA3B8;font-size:14px;margin:0 0 14px}
+.diagram svg{width:100%;height:auto;display:block}
+.diagram text{font-family:'Archivo',system-ui,sans-serif;fill:#C9D6E3}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:#C9D6E3;margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:7px;vertical-align:-1px}
+.legend .a::before{background:#3FB37F}.legend .b::before{background:rgba(124,195,242,.9)}.legend .c::before{background:rgba(224,169,59,.95)}
+
+/* tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:#fff;margin:14px 0 18px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--navy);color:#fff;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-stretch:87.5%}
+tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:#FAFBFD}
+td.num,th.num{text-align:center;font-variant-numeric:tabular-nums}
+.trim td.num{font-weight:600;color:var(--t1)}
+.trim td.up{background:#FBEFD2;color:#6b4708}
+.trim td.dn{background:#DCEBF8;color:#0f3f68}
+.trim td.na{color:#9AA8B8;background:#F2F5F9}
+.trim td.w{font-weight:700;background:var(--bg);color:var(--navy)}
+.keys{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--t2);margin:-4px 0 16px}
+.keys span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:7px;vertical-align:-2px;border:1px solid var(--line)}
+.keys .k1::before{background:#FBEFD2}.keys .k2::before{background:#DCEBF8}.keys .k3::before{background:#fff}
+
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;text-transform:uppercase}
+.tag.adv{background:#E7F0F9;color:#1B6FB0}
+.tag.warn{background:#FBE4E1;color:#A3271B}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:#EEF2F7;padding:1px 6px;border-radius:3px;color:var(--navy)}
+.src{font-size:13.5px;color:var(--t3)}
+
+ul.clean{padding-left:20px;margin:0 0 16px;color:var(--t2)}
+ul.clean li{margin:6px 0}
+
+.notfound li::marker{color:var(--caution)}
+footer{margin-top:72px;background:var(--navy-d);color:#8FA3B8;font-size:14px}
+footer .wrap{padding-top:34px;padding-bottom:40px}
+footer strong{color:#C9D6E3}
+footer p{color:#8FA3B8}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <a href="/">Gio<span>Aviation</span>.aero</a>
+  <a class="back" href="/articoli.html">&larr; All articles</a>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <span class="eyebrow"><i></i>Systems &middot; ATA 27 Flight Controls</span>
+  <h1>747-400F <em>Stabilizer Trim</em> and the Green Band</h1>
+  <p class="lead">Why the 747 trims the whole stabilizer, what the green band actually represents, how it is calculated, and how the system protects you from a mistrimmed takeoff.</p>
+  <div class="chips">
+    <span class="chip lock">Members only</span>
+    <span class="chip">Teaching note &middot; 747 conversion</span>
+    <span class="chip">Operational</span>
+  </div>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#why">Why stabilizer trim</a>
+  <a href="#move">How it moves</a>
+  <a href="#band">The green band</a>
+  <a href="#calc">Calculation</a>
+  <a href="#protect">Protections</a>
+  <a href="#practice">In practice</a>
+  <a href="#figures">Figures</a>
+  <a href="#refs">References</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="why">
+  <p class="part">Part 1 &middot; The explanation</p>
+  <div class="sec-head"><span class="n">01</span><h2>Why the 747 trims the stabilizer, not the elevator</h2></div>
+  <div class="card">
+    <p>The 747 has no elevator trim tab. Pitch trim changes the incidence of the <strong>whole horizontal stabilizer</strong>. The surface is very large, so a few degrees of incidence produce a large nose-up or nose-down pitching moment.</p>
+    <p style="margin:0">That is why trim must be correct before takeoff. The elevator is for manoeuvring <em>around</em> the trim setting. It is not meant to make up for a wrong trim.</p>
+  </div>
+</section>
+
+<section id="move">
+  <div class="sec-head"><span class="n">02</span><h2>How the stabilizer moves</h2></div>
+  <p>Two hydraulic actuators move the stabilizer, each with its own stabilizer trim control module (STCM). Hydraulic system 3 powers the left STCM and system 2 powers the right. The two outputs add together mechanically. If one actuator fails, the other keeps trimming alone at half rate.</p>
+  <h3>Four ways to command trim</h3>
+  <div class="grid2">
+    <div class="card method"><b>Control wheel trim switches</b><p>The normal method. Both switches must be pushed together, in the same direction. Opposite inputs from Captain and F/O do nothing. Column movement against the trim triggers the column cutout.</p></div>
+    <div class="card method alt"><b>Alternate (ALTN) switches</b><p>On the aisle stand. They command the STCMs directly, are not stopped by the column cutout, and give the widest trim range.</p></div>
+    <div class="card method"><b>Autopilot</b><p>Trim is automatic. Wheel switches with a single autopilot engaged disconnect it. With more than one engaged they are inhibited. ALTN always overrides and never disconnects the autopilot.</p></div>
+    <div class="card method alt"><b>Speed trim</b><p>Corrects speed stability automatically in some phases of flight. It has no effect on takeoff.</p></div>
+  </div>
+  <div class="callout blue">
+    <strong>STAB TRIM CUTOUT switches.</strong> Two on the aisle stand, one per channel. In <span class="mono">AUTO</span> a switch removes hydraulic power by itself if it detects unscheduled trim. In <span class="mono">CUTOUT</span> it removes power at all times.
+  </div>
+  <p><strong>Indicators.</strong> Two, one each side of the thrust levers, scale 0 to 15 <strong>units</strong>. <strong>0 at the top is full nose down; 15 at the bottom is full nose up.</strong> More units means more nose up.</p>
+</section>
+
+<section id="band">
+  <div class="sec-head"><span class="n">03</span><h2>What the green band is</h2></div>
+  <p>The green strip beside the scale shows <strong>the trim range acceptable for takeoff at the current weight, CG and thrust</strong>. The pointer must be inside it before takeoff.</p>
+  <p>The key point: the band <strong>is not fixed</strong>. It moves with the loading.</p>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Forward CG</h3><p style="margin:0">Nose-heavy. More pitch-up authority is needed at rotation, so you need <strong>more nose-up trim</strong>.</p></div>
+    <div class="card"><h3 style="margin-top:0">Aft CG</h3><p style="margin:0">Rotates more easily. You need <strong>less nose-up trim</strong>.</p></div>
+  </div>
+  <p style="margin-top:18px">The FPPM tables show it clearly. At the same weight, moving the CG from 9% to 33% MAC lowers the required trim by several units. A heavier aircraft needs more trim. Thrust matters too: at many weights and CGs the TO2 derate table calls for more units than full thrust.</p>
+
+  <h3>The three bands</h3>
+  <div class="diagram">
+    <h3>Green band limits on the 0&ndash;15 scale</h3>
+    <p class="sub">Trim units. Left is nose down, right is nose up.</p>
+    <svg viewBox="0 0 720 262" role="img" aria-label="Three green band ranges on the stabilizer trim scale: mid-band 3.35 to 8.15, nose-down band 1.35 to 8.15, nose-up band 3.35 to 10.15">
+      <!-- scale: x = 50 + u*40 -->
+      <g stroke="rgba(255,255,255,.12)">
+        <line x1="50" y1="40" x2="50" y2="190"/><line x1="90" y1="40" x2="90" y2="190"/><line x1="130" y1="40" x2="130" y2="190"/><line x1="170" y1="40" x2="170" y2="190"/><line x1="210" y1="40" x2="210" y2="190"/><line x1="250" y1="40" x2="250" y2="190"/><line x1="290" y1="40" x2="290" y2="190"/><line x1="330" y1="40" x2="330" y2="190"/><line x1="370" y1="40" x2="370" y2="190"/><line x1="410" y1="40" x2="410" y2="190"/><line x1="450" y1="40" x2="450" y2="190"/><line x1="490" y1="40" x2="490" y2="190"/><line x1="530" y1="40" x2="530" y2="190"/><line x1="570" y1="40" x2="570" y2="190"/><line x1="610" y1="40" x2="610" y2="190"/><line x1="650" y1="40" x2="650" y2="190"/>
+      </g>
+      <g font-size="12" text-anchor="middle">
+        <text x="50" y="206">0</text><text x="90" y="206">1</text><text x="130" y="206">2</text><text x="170" y="206">3</text><text x="210" y="206">4</text><text x="250" y="206">5</text><text x="290" y="206">6</text><text x="330" y="206">7</text><text x="370" y="206">8</text><text x="410" y="206">9</text><text x="450" y="206">10</text><text x="490" y="206">11</text><text x="530" y="206">12</text><text x="570" y="206">13</text><text x="610" y="206">14</text><text x="650" y="206">15</text>
+      </g>
+      <text x="50" y="232" font-size="11.5" letter-spacing="1.5" style="fill:#8FA3B8">NOSE DOWN</text>
+      <text x="650" y="232" font-size="11.5" letter-spacing="1.5" text-anchor="end" style="fill:#8FA3B8">NOSE UP</text>
+
+      <!-- mid: 3.35-8.15 -> 184 to 376 -->
+      <rect x="184" y="48" width="192" height="30" rx="3" fill="#3FB37F"/>
+      <text x="280" y="68" font-size="13" font-weight="700" text-anchor="middle" style="fill:#06231a">Mid-band 3.35 &ndash; 8.15</text>
+      <text x="44" y="68" font-size="12.5" text-anchor="end" style="fill:#C9D6E3"></text>
+
+      <!-- nose down: 1.35-8.15 -> 104 to 376 -->
+      <rect x="104" y="95" width="80" height="30" rx="3" fill="rgba(124,195,242,.92)"/>
+      <rect x="184" y="95" width="192" height="30" fill="#3FB37F" opacity=".55"/>
+      <text x="144" y="115" font-size="12" font-weight="700" text-anchor="middle" style="fill:#0a2a45">&#8722;2.0</text>
+      <text x="280" y="115" font-size="13" font-weight="700" text-anchor="middle" style="fill:#fff">Nose-down 1.35 &ndash; 8.15 (aft CG)</text>
+
+      <!-- nose up: 3.35-10.15 -> 184 to 456 -->
+      <rect x="184" y="142" width="192" height="30" fill="#3FB37F" opacity=".55"/>
+      <rect x="376" y="142" width="80" height="30" rx="3" fill="rgba(224,169,59,.95)"/>
+      <text x="280" y="162" font-size="13" font-weight="700" text-anchor="middle" style="fill:#fff">Nose-up 3.35 &ndash; 10.15 (fwd CG)</text>
+      <text x="416" y="162" font-size="12" font-weight="700" text-anchor="middle" style="fill:#3b2a06">+2.0</text>
+    </svg>
+    <div class="legend"><span class="a">Mid-band (always included)</span><span class="b">Extension, aft CG</span><span class="c">Extension, forward CG</span></div>
+  </div>
+
+  <div class="grid3" style="margin-top:20px">
+    <div class="card"><h3 style="margin-top:0;font-size:18px">Mid-band</h3><p style="margin:0;font-size:15.5px">The basic band for a mid-range CG. On most aircraft it is a painted green stripe.</p></div>
+    <div class="card"><h3 style="margin-top:0;font-size:18px">Nose-up band</h3><p style="margin:0;font-size:15.5px">Selected for a <strong>forward CG</strong>. Covers the whole mid-band plus an extra section towards nose up.</p></div>
+    <div class="card"><h3 style="margin-top:0;font-size:18px">Nose-down band</h3><p style="margin:0;font-size:15.5px">Selected for an <strong>aft CG</strong>. Covers the whole mid-band plus an extra section towards nose down.</p></div>
+  </div>
+  <p style="margin-top:16px">So the mid-band is always there, and the system adds an extension up or down according to CG. The band lights come on only on the ground, with a valid CG or with engines running, and go out above V1.</p>
+</section>
+
+<section id="calc">
+  <div class="sec-head"><span class="n">04</span><h2>How it is calculated</h2></div>
+  <p>During FMC preflight you enter the <strong>takeoff CG</strong> (%MAC) on the TAKEOFF REF page. The FMC already holds gross weight and the selected thrust or derate. From these three inputs it:</p>
+  <div class="flow">
+    <div class="step"><div class="k">1 &middot; Trim</div><div class="v">Calculates the takeoff trim and shows it next to the CG entry, in 0.1-unit steps.</div></div>
+    <div class="step"><div class="k">2 &middot; Band</div><div class="v">Feeds the MAWEA (warning electronics), which decides which of the three green bands to light.</div></div>
+    <div class="step"><div class="k">3 &middot; You</div><div class="v">Set the trim, cross-check it against the loadsheet, and confirm the pointer is inside the lit band.</div></div>
+  </div>
+</section>
+
+<section id="protect">
+  <div class="sec-head"><span class="n">05</span><h2>Two layers of protection</h2></div>
+  <h3 style="margin-top:0">The independent check: nose gear pressure switch</h3>
+  <p>The system does not rely only on what was typed into the FMC. A <strong>pressure switch</strong> on the nose gear strut senses the CG physically. A forward CG puts more weight on the nose gear, the strut compresses and pressure rises. An aft CG lowers it.</p>
+  <p>The MAWEA compares the switch with the calculated band. If they disagree, the advisory <span class="tag adv">&gt;STAB GREENBAND</span> appears: the loading, gross weight, CG or thrust entry may be wrong. There is no comparison when the mid-band is selected.</p>
+  <div class="callout"><strong>Even when they disagree, the band that stays lit is the one calculated from FMC data.</strong> The message is only a prompt to recheck the data.</div>
+
+  <h3>The safety net: CONFIG STAB</h3>
+  <p>If the advisory is missed, or the trim is simply wrong, setting takeoff thrust with the stabilizer <strong>outside the green band</strong> triggers <span class="tag warn">&gt;CONFIG STAB</span> with a siren. Conditions: on the ground, below V1, fuel control switches in RUN, takeoff thrust on an inboard engine.</p>
+</section>
+
+<section id="practice">
+  <div class="sec-head"><span class="n">06</span><h2>In practice</h2></div>
+  <div class="card">
+    <div class="flow" style="margin:0">
+      <div class="step"><div class="k">Before Start</div><div class="v">The Captain sets takeoff trim and checks it is in the green band. The value is cross-checked against the loadsheet MACTOW.</div></div>
+      <div class="step"><div class="k">Runway or data change</div><div class="v">Re-enter the CG, reset the trim, recheck the green band.</div></div>
+      <div class="step"><div class="k">During rotation</div><div class="v">Do not trim. Per the FCTM, trimming during rotation costs you the feel of the elevator, which can lead to too high a rotation rate and a tail strike.</div></div>
+      <div class="step"><div class="k">Common sense</div><div class="v">The FCTM lists a mistrimmed stabilizer, usually from wrong data, as a tail strike risk factor. The best defence is to check that the loadsheet numbers make sense against your experience.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="figures">
+  <p class="part">Part 2 &middot; Figures and references</p>
+  <div class="sec-head"><span class="n">07</span><h2>Reference figures</h2></div>
+
+  <h3 style="margin-top:0">Green band limits (trim units)</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Band</th><th>Selected for</th><th>Limits</th><th>Versus mid-band</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Mid-band</strong></td><td>Mid CG</td><td>3.35 &ndash; 8.15</td><td>Basic band</td></tr>
+      <tr><td><strong>Nose down</strong></td><td>Aft CG</td><td>1.35 &ndash; 8.15</td><td>Extra nose down to 1.35</td></tr>
+      <tr><td><strong>Nose up</strong></td><td>Forward CG</td><td>3.35 &ndash; 10.15</td><td>Extra nose up to 10.15</td></tr>
+    </tbody></table></div>
+  <p class="src">Source: ATA 27 training manual (Jan 2024), figures 27-40-00-035, 27-48-00-006 and 27-48-00-009. Band definition: FCOM 9.20.3.</p>
+
+  <h3>Stabilizer travel limits (units)</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Condition</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr><td>Normal electric trim (gear and flaps up, no speed trim)</td><td>1.8 &ndash; 11.6</td></tr>
+      <tr><td>Gear or flaps down, or speed trim active</td><td>Nose down to 0.8</td></tr>
+      <tr><td>Full-rate autotrim (LAND 2)</td><td>Nose up to 13.5</td></tr>
+      <tr><td>Alternate trim</td><td>0.25 &ndash; 14.75</td></tr>
+    </tbody></table></div>
+  <p class="src">Source: ATA 27, 27-40-00-035.</p>
+
+  <h3>Takeoff trim, full rated thrust (CF6-80C2B1F)</h3>
+  <p>Trim units by weight (1000 kg) and CG (%MAC).</p>
+  <div class="tablewrap"><table class="trim" id="trimtable">
+    <thead><tr><th>Weight</th><th class="num">9</th><th class="num">13</th><th class="num">17</th><th class="num">21</th><th class="num">25</th><th class="num">29</th><th class="num">33</th></tr></thead>
+    <tbody>
+      <tr><td class="w">400</td><td class="num">9½</td><td class="num">9</td><td class="num">8</td><td class="num">7</td><td class="num">6</td><td class="num">5</td><td class="num">4</td></tr>
+      <tr><td class="w">380</td><td class="num">9½</td><td class="num">9</td><td class="num">8</td><td class="num">7</td><td class="num">5½</td><td class="num">4½</td><td class="num">3½</td></tr>
+      <tr><td class="w">360</td><td class="num">9½</td><td class="num">8½</td><td class="num">7½</td><td class="num">6½</td><td class="num">5½</td><td class="num">4½</td><td class="num">3½</td></tr>
+      <tr><td class="w">340</td><td class="num">9½</td><td class="num">8½</td><td class="num">7½</td><td class="num">6½</td><td class="num">5½</td><td class="num">4½</td><td class="num">3½</td></tr>
+      <tr><td class="w">320</td><td class="num">9½</td><td class="num">8½</td><td class="num">7½</td><td class="num">6½</td><td class="num">5½</td><td class="num">4</td><td class="num">3</td></tr>
+      <tr><td class="w">300</td><td class="num">9</td><td class="num">8</td><td class="num">7</td><td class="num">6</td><td class="num">5</td><td class="num">4</td><td class="num">3</td></tr>
+      <tr><td class="w">280</td><td class="num">8½</td><td class="num">7½</td><td class="num">6½</td><td class="num">5½</td><td class="num">4½</td><td class="num">3½</td><td class="num">2½</td></tr>
+      <tr><td class="w">260</td><td class="num">8</td><td class="num">7</td><td class="num">6</td><td class="num">5</td><td class="num">4</td><td class="num">3</td><td class="num">2</td></tr>
+      <tr><td class="w">240</td><td class="num">–</td><td class="num">6</td><td class="num">5</td><td class="num">4½</td><td class="num">3½</td><td class="num">2½</td><td class="num">2</td></tr>
+      <tr><td class="w">220</td><td class="num">–</td><td class="num">5</td><td class="num">4½</td><td class="num">3½</td><td class="num">3</td><td class="num">2</td><td class="num">2</td></tr>
+      <tr><td class="w">200</td><td class="num">–</td><td class="num">4</td><td class="num">3½</td><td class="num">3</td><td class="num">2½</td><td class="num">2</td><td class="num">2</td></tr>
+    </tbody></table></div>
+  <div class="keys"><span class="k1">Above 8.15: nose-up band only</span><span class="k2">Below 3.35: nose-down band only</span><span class="k3">Inside the mid-band</span></div>
+  <ul class="clean">
+    <li><strong>TO1</strong> (5% thrust reduction): same values as full thrust.</li>
+    <li><strong>TO2</strong> (15% thrust reduction): equal or higher values. At 400 t: 9½ / 9½ / 8½ / 7½ / 6 / 5 / 4.</li>
+  </ul>
+  <p class="src">Source: FPPM D632U002-RZ101, 28 Jun 2022 (pp. 1.2.24, 1.3.11, 1.3.22). Tables are for CF6 engines: check they match the engine type of the aircraft.</p>
+
+  <h3>System data</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>FMC CG entry</td><td>Whole numbers 0&ndash;40 %MAC; trim shown in 0.1-unit steps</td><td>FCOM 11.40.28</td></tr>
+      <tr><td>Invalid CG (band off, STAB GREENBAND shown)</td><td>Below 8.5 or above 33.0</td><td>MEL 27-48-02</td></tr>
+      <tr><td>Pressure switch set points</td><td>LOW 650 psi (aft CG side), HIGH 750 psi (fwd CG side). Schematic only</td><td>ATA 27, 27-48-00-009</td></tr>
+      <tr><td>STCM hydraulic supply</td><td>Left: system 3. Right: system 2</td><td>ATA 27, 27-41-00-019</td></tr>
+      <tr><td>Column cutout</td><td>4.5&deg; of column movement against the trim command</td><td>ATA 27, 27-41-00-030</td></tr>
+      <tr><td>Green band lights</td><td>On the ground only; off above V1</td><td>ATA 31, 31-51-00-031/039</td></tr>
+    </tbody></table></div>
+
+  <h3>EICAS messages</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Message</th><th>Level</th><th>Condition</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">&gt;STAB GREENBAND</span></td><td><span class="tag adv">Advisory</span></td><td>Nose gear pressure switch disagrees with the calculated band; loading, gross weight, CG or thrust entry may be wrong</td><td>QRH 9.10; FCOM 9.30.1</td></tr>
+      <tr><td><span class="mono">&gt;CONFIG STAB</span></td><td><span class="tag warn">Warning + siren</span></td><td>Stabilizer outside the green band, on the ground, below V1, three or more fuel control switches in RUN, engine 2 or 3 at takeoff thrust</td><td>FCOM 15.30.1; QRH 15.2</td></tr>
+    </tbody></table></div>
+
+  <h3>Procedures and technique</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Phase</th><th>Text</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Before Start</td><td>Set the trim for takeoff. Check that the trim is in the green band.</td><td>FCOM NP.20.21</td></tr>
+      <tr><td>TAKEOFF REF entries</td><td>At MACTOW the Captain responds with the STAB TRIM setting</td><td>FCOM NP.20.20</td></tr>
+      <tr><td>Runway or performance change</td><td>Re-enter CG, reset trim, check green band</td><td>FCOM SP.11.1&ndash;11.2</td></tr>
+      <tr><td>Manual loadsheet</td><td>Takeoff trim from the stab trim table</td><td>Operations Manual Part B</td></tr>
+      <tr><td>Rotation</td><td>Use of stabilizer trim during rotation is not recommended</td><td>FCTM 3.8; 8.37</td></tr>
+      <tr><td>Tail strike</td><td>Mistrimmed stabilizer is a risk factor</td><td>FCTM 8.36</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="refs">
+  <div class="sec-head"><span class="n">08</span><h2>Source revisions and gaps</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0;font-size:18px">Source revisions</h3>
+      <ul class="clean" style="margin:0">
+        <li>FCOM D6-30151-543 (AID), Rev. 21.1.0, 01 Apr 2026</li>
+        <li>QRH D6-30151-543 (AMM), 01 Apr 2021</li>
+        <li>FPPM D632U002-RZ101, 28 Jun 2022</li>
+        <li>FCTM FCT 747 (TM), 27 Feb 2026</li>
+        <li>MEL and Operations Manual Part B, current revisions</li>
+        <li>ATA 27 / ATA 31 training manual, Jan 2024</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:18px">Not found in sources</h3>
+      <ul class="clean notfound" style="margin:0">
+        <li>The CG, weight and thrust thresholds the MAWEA uses to choose between bands.</li>
+        <li>Trim corrections for flap 10 or flap 20.</li>
+        <li>A takeoff trim table for PW4000 engines.</li>
+        <li>The values in the Part B stab trim table.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  <p><strong>For training purposes only.</strong> Teaching note for pilots converting to the 747. Where there is any doubt, the manuals take precedence. This page is not a controlled document and does not replace the FCOM, QRH, FCTM or company procedures.</p>
+  <p style="margin:0">&copy; GioAviation.aero &middot; Members area</p>
+</div></footer>
+
+<script>
+(function(){
+  var rows=document.querySelectorAll('#trimtable tbody tr');
+  rows.forEach(function(tr){
+    tr.querySelectorAll('td.num').forEach(function(td){
+      var t=td.textContent.trim();
+      if(t==='–'){td.classList.add('na');return;}
+      var v=parseFloat(t)+(t.indexOf('½')>-1?0.5:0);
+      if(v>8.15)td.classList.add('up');
+      else if(v<3.35)td.classList.add('dn');
+    });
+  });
+})();
+</script>
+</body>
+</html>
