@@ -126,6 +126,11 @@
           </div>
         </div>
 
+        <div class="field">
+          <label class="check" for="art-newsletter"><input type="checkbox" id="art-newsletter" disabled><span>Also send this article as a newsletter when I save it</span></label>
+          <span id="art-news-hint" class="help"></span>
+        </div>
+
         <div class="actions-row">
           <button type="submit" class="btn">Save article</button>
           <button type="button" id="art-cancel" class="btn ghost" hidden>Cancel edit</button>
@@ -154,7 +159,7 @@
   .art-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:center; padding:14px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; background:var(--paper); }
   .art-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
   .art-row .muted{ color:var(--grey); font-size:0.8125rem; }
-  .art-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .art-row .actions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
   .art-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
   @media (max-width:860px){ .art-row{ grid-template-columns:1fr; } .art-row .actions{ justify-content:flex-start; } }
 
@@ -198,6 +203,106 @@
   var previewEl = document.getElementById('art-preview');
   var list = document.getElementById('art-list');
   var articles = [];
+
+  // ------------------------------------------------------------- newsletter --
+  var newsChk = document.getElementById('art-newsletter');
+  var newsHint = document.getElementById('art-news-hint');
+  var subscribers = null;     // approved + activated + opted-in pilots
+  var editingSentAt = null;   // newsletter_sent_at of the article being edited
+
+  var NEWS_ERR = {
+    already_sent: 'it was already sent',
+    not_published: 'the article is not published',
+    no_subscribers: 'nobody is subscribed yet',
+    resend_not_configured: 'the email key RESEND_API_KEY is not set on the Worker',
+    session_secret_missing: 'SESSION_SECRET is not set on the Worker',
+    no_test_address: 'ADMIN_NOTIFY_EMAIL is not set on the Worker',
+    not_found: 'article not found'
+  };
+
+  function fmtDate(iso){
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  function pilots(n){ return n + (n === 1 ? ' pilot' : ' pilots'); }
+
+  function loadStats(){
+    return fetch('/api/admin/newsletter/stats')
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(d){ if (d && d.ok){ subscribers = d.subscribers; refreshNewsBox(); } })
+      .catch(function(){});
+  }
+
+  // The count is needed before any send. If it has not loaded yet (or failed),
+  // fetch it again; null means it really could not be read — never treat an
+  // unknown count as "nobody subscribed".
+  function ensureCount(){
+    if (subscribers !== null) return Promise.resolve(subscribers);
+    return loadStats().then(function(){ return subscribers; });
+  }
+  var COUNT_ERR = 'Could not read the number of subscribers, so nothing was done. Please try again.';
+
+  function refreshNewsBox(){
+    var published = statusField.value === 'published';
+    var sent = !!editingSentAt;
+    newsChk.disabled = !published || sent;
+    if (newsChk.disabled) newsChk.checked = false;
+    if (sent) newsHint.textContent = 'The newsletter for this article was already sent on ' + fmtDate(editingSentAt) + '.';
+    else if (!published) newsHint.textContent = 'Set Status to Published to enable this option.';
+    else if (subscribers === null) newsHint.textContent = '';
+    else newsHint.textContent = pilots(subscribers) + ' would receive the email (activated accounts that opted in).' +
+      (accessField.value === 'members' ? ' Members-only article: the email shows title and category only, no excerpt.' : '');
+  }
+
+  function describeNewsletter(nl){
+    if (!nl) return '';
+    if (nl.ok){
+      var s = ' Newsletter sent to ' + pilots(nl.sent) + '.';
+      if (nl.failed) s += ' ' + nl.failed + ' could not be delivered (' + (nl.error || 'error') + ').';
+      return s;
+    }
+    return ' Newsletter NOT sent: ' + (NEWS_ERR[nl.error] || nl.error || 'unknown error') + '.';
+  }
+
+  function postNewsletter(id, test){
+    return fetch('/api/admin/newsletter/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'article', id: id, test: !!test })
+    })
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(d){ return d && d.newsletter ? d.newsletter : { ok: false, error: (d && d.error) || 'error' }; })
+      .catch(function(){ return { ok: false, error: 'connection problem' }; });
+  }
+
+  function newsletterFromList(btn){
+    var id = Number(btn.dataset.id);
+    var test = btn.dataset.action === 'news-test';
+    var name = btn.dataset.name || 'this article';
+
+    function go(){
+      btn.disabled = true;
+      postNewsletter(id, test).then(function(nl){
+        btn.disabled = false;
+        if (test){
+          setStatus(nl.ok ? 'ok' : 'err', nl.ok ? 'Test email sent to the admin address. Check the inbox and the spam folder.' : 'Test email NOT sent: ' + (NEWS_ERR[nl.error] || nl.error || 'error') + '.');
+          return;
+        }
+        setStatus(nl.ok ? 'ok' : 'err', describeNewsletter(nl).trim());
+        loadArticles();
+      });
+    }
+
+    if (test){ go(); return; }
+    ensureCount().then(function(n){
+      if (n === null){ setStatus('err', COUNT_ERR); return; }
+      if (!n){ setStatus('err', 'Nobody is subscribed yet, so no email would be sent.'); return; }
+      if (!window.confirm('Send "' + name + '" by email to ' + pilots(n) + ' now? This cannot be undone.')) return;
+      go();
+    });
+  }
 
   var ALIGN = ['left', 'center', 'right', 'justify'];
   var BLOCK_RE = /^(P|H[1-6]|UL|OL|BLOCKQUOTE|DIV|HR|TABLE|PRE)$/;
@@ -421,14 +526,20 @@
 
   // ---------------------------------------------------------------- articles --
   function rowHtml(a){
+    var published = a.status === 'published';
+    var news = published
+      ? '<div class="muted">Newsletter: ' + (a.newsletter_sent_at ? 'sent ' + esc(fmtDate(a.newsletter_sent_at)) : 'not sent') + '</div>'
+      : '';
     return '<div class="art-row">' +
-      '<div><div class="name">' + esc(a.title) + '</div><div class="muted">/' + esc(a.slug) + '</div></div>' +
+      '<div><div class="name">' + esc(a.title) + '</div><div class="muted">/' + esc(a.slug) + '</div>' + news + '</div>' +
       '<div class="muted">' + esc(a.category_name || '—') + '</div>' +
       '<div><span class="pill ' + a.status + '">' + esc(a.status) + '</span>' +
         (a.access === 'members' ? ' <span class="chip grey" title="Visible to approved members only">Members</span>' : '') + '</div>' +
       '<div class="actions">' +
         '<button type="button" data-action="edit" data-id="' + a.id + '">Edit</button>' +
-        (a.status === 'published' ? '<button type="button" data-action="view" data-slug="' + esc(a.slug) + '">View</button>' : '') +
+        (published ? '<button type="button" data-action="view" data-slug="' + esc(a.slug) + '">View</button>' : '') +
+        (published ? '<button type="button" data-action="news-test" data-id="' + a.id + '" data-name="' + esc(a.title) + '" title="Send one copy of the newsletter to the admin address only">Test email</button>' : '') +
+        (published && !a.newsletter_sent_at ? '<button type="button" data-action="news-send" data-id="' + a.id + '" data-name="' + esc(a.title) + '" title="Send the newsletter to all subscribers">Send newsletter</button>' : '') +
         '<button type="button" data-action="delete" data-id="' + a.id + '" data-name="' + esc(a.title) + '">Delete</button>' +
       '</div></div>';
   }
@@ -453,6 +564,9 @@
     previewEl.style.display = 'none';
     previewToggle.textContent = 'Preview as readers see it';
     cancelBtn.hidden = true;
+    editingSentAt = null;
+    newsChk.checked = false;
+    refreshNewsBox();
   }
 
   form.addEventListener('submit', function(e){
@@ -461,6 +575,7 @@
     if (!window.DOMPurify){ setStatus('err', 'The editor could not load a required library. Reload the page and try again.'); return; }
     if (!titleField.value.trim()){ setStatus('err', 'Please enter a title.'); titleField.focus(); return; }
     if (bodyIsEmpty()){ setStatus('err', 'The article body is empty.'); editor.focus(); return; }
+    var wantNews = !newsChk.disabled && newsChk.checked && statusField.value === 'published';
     var payload = {
       id: idField.value || undefined,
       title: titleField.value.trim(),
@@ -469,23 +584,42 @@
       status: statusField.value,
       access: accessField.value,
       excerpt: excerptField.value.trim(),
-      body_markdown: getBody()
+      body_markdown: getBody(),
+      send_newsletter: false
     };
-    fetch('/api/admin/articles/save', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-    })
-      .then(function(res){ return res.json(); })
-      .then(function(data){
-        if (!data.ok){
-          setStatus('err', data.error === 'slug_taken' ? 'That URL slug is already used by another article.' : 'Could not save the article (' + (data.error || 'error') + ').');
-          return;
-        }
-        resetForm();
-        setStatus('ok', 'Saved.');
-        loadArticles();
+
+    function post(){
+      fetch('/api/admin/articles/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       })
-      .catch(function(){ setStatus('err', 'Connection problem — please try again.'); });
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if (!data.ok){
+            setStatus('err', data.error === 'slug_taken' ? 'That URL slug is already used by another article.' : 'Could not save the article (' + (data.error || 'error') + ').');
+            return;
+          }
+          resetForm();
+          var nl = data.newsletter;
+          setStatus(nl && !nl.ok ? 'err' : 'ok', 'Saved.' + describeNewsletter(nl));
+          loadArticles();
+        })
+        .catch(function(){ setStatus('err', 'Connection problem — please try again.'); });
+    }
+
+    if (!wantNews){ post(); return; }
+    ensureCount().then(function(n){
+      if (n === null){ setStatus('err', COUNT_ERR); return; }
+      var question = n
+        ? 'Save and send "' + payload.title + '" by email to ' + pilots(n) + ' now? The email cannot be recalled.'
+        : 'Nobody is subscribed yet, so no email would be sent. Save the article anyway?';
+      if (!window.confirm(question)) return;
+      payload.send_newsletter = n > 0;
+      post();
+    });
   });
+
+  statusField.addEventListener('change', refreshNewsBox);
+  accessField.addEventListener('change', refreshNewsBox);
 
   cancelBtn.addEventListener('click', resetForm);
 
@@ -508,6 +642,10 @@
       return;
     }
     var id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'news-test' || btn.dataset.action === 'news-send'){
+      newsletterFromList(btn);
+      return;
+    }
     if (btn.dataset.action === 'edit'){
       var a = articles.find(function(x){ return x.id === id; });
       if (!a) return;
@@ -520,6 +658,9 @@
       excerptField.value = a.excerpt || '';
       setBody(a.body_markdown);
       cancelBtn.hidden = false;
+      editingSentAt = a.newsletter_sent_at || null;
+      newsChk.checked = false;
+      refreshNewsBox();
       window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
     }
     if (btn.dataset.action === 'delete'){
@@ -530,6 +671,8 @@
     }
   });
 
+  refreshNewsBox();
+  loadStats();
   loadCategories().then(loadArticles);
 })();
 </script>
