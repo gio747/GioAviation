@@ -87,6 +87,8 @@ const PUBLIC_PATHS = new Set([
   "/articolo",
   "/newsletter.html",
   "/newsletter",
+  "/privacy.html",
+  "/privacy",
 ]);
 
 // Pilot pages reachable even before the mandatory profile is completed.
