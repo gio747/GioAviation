@@ -10,5 +10,6 @@ wrangler.jsonc
 schema.sql
 migration-002-backend.sql
 migration-003-article-access.sql
+migration-004-newsletter.sql
 README.md
 README-DEPLOY.md

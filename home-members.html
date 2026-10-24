@@ -25,6 +25,9 @@
   .quick h3{ font-size:1.125rem; }
   .quick p{ color:var(--ink-soft); font-size:0.9375rem; }
   .quick .go{ color:var(--sky); font-weight:600; font-size:0.9375rem; }
+  .notify{ display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; }
+  .notify h3{ font-size:1.0625rem; margin-bottom:4px; }
+  .notify p{ color:var(--ink-soft); font-size:0.9375rem; max-width:60ch; }
   @media (max-width:860px){ .quick{ grid-template-columns:1fr; } .whoami{ display:none; } }
 </style>
 </head>
@@ -121,6 +124,13 @@
         <a href="articoli.html"><h3>Articles</h3><p>Notes on 747-400 operations, written from the line.</p><span class="go">Read articles →</span></a>
         <a href="credenziali.html"><h3>How this library is built</h3><p>Sources, revisions and the standard behind every document.</p><span class="go">Read more →</span></a>
         <a href="contatti.html"><h3>Contact</h3><p>Questions, corrections or requests for material.</p><span class="go">Get in touch →</span></a>
+      </div>
+      <div class="notify" style="margin-top:20px;">
+        <div>
+          <h3>Email notifications</h3>
+          <p>Choose whether to receive one email each time a new article or document is published. It is off until you turn it on.</p>
+        </div>
+        <a class="btn ghost" href="newsletter.html">Manage notifications</a>
       </div>
     </div>
   </section>

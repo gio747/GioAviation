@@ -85,6 +85,10 @@
             <option value="published">Published</option>
           </select>
         </div>
+        <div class="field">
+          <label class="check" for="up-newsletter"><input type="checkbox" id="up-newsletter" disabled><span>Also send this document as a newsletter when I upload it</span></label>
+          <span id="up-news-hint" class="help"></span>
+        </div>
         <div class="actions-row">
           <button type="submit" class="btn">Upload</button>
         </div>
@@ -123,6 +127,10 @@
             <option value="published">Published</option>
           </select>
         </div>
+        <div class="field">
+          <label class="check" for="ed-newsletter"><input type="checkbox" id="ed-newsletter" disabled><span>Also send this document as a newsletter when I save</span></label>
+          <span id="ed-news-hint" class="help"></span>
+        </div>
         <div class="actions-row">
           <button type="submit" class="btn">Save changes</button>
           <button type="button" id="ed-cancel" class="btn ghost">Cancel</button>
@@ -150,7 +158,7 @@
   .doc-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:center; padding:14px 18px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; background:var(--paper); }
   .doc-row .name{ font-family:var(--font); font-weight:700; color:var(--navy); }
   .doc-row .muted{ color:var(--grey); font-size:0.8125rem; }
-  .doc-row .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .doc-row .actions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
   .doc-row .actions button{ font-family:var(--font); font-weight:700; font-size:0.8125rem; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; }
   @media (max-width:860px){ .doc-row{ grid-template-columns:1fr; } .doc-row .actions{ justify-content:flex-start; } }
 </style>
@@ -181,6 +189,123 @@
   var documents = [];
   var categoryOptionsHtml = '<option value="">— none —</option>';
 
+  // ------------------------------------------------------------- newsletter --
+  var upStatus = document.getElementById('up-status');
+  var upNews = document.getElementById('up-newsletter');
+  var upHint = document.getElementById('up-news-hint');
+  var edStatus = document.getElementById('ed-status');
+  var edNews = document.getElementById('ed-newsletter');
+  var edHint = document.getElementById('ed-news-hint');
+  var subscribers = null;     // approved + activated + opted-in pilots
+  var editingSentAt = null;   // newsletter_sent_at of the document being edited
+
+  var NEWS_ERR = {
+    already_sent: 'it was already sent',
+    not_published: 'the document is not published',
+    no_subscribers: 'nobody is subscribed yet',
+    resend_not_configured: 'the email key RESEND_API_KEY is not set on the Worker',
+    session_secret_missing: 'SESSION_SECRET is not set on the Worker',
+    no_test_address: 'ADMIN_NOTIFY_EMAIL is not set on the Worker',
+    not_found: 'document not found'
+  };
+
+  function fmtDate(iso){
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  function pilots(n){ return n + (n === 1 ? ' pilot' : ' pilots'); }
+
+  function loadStats(){
+    return fetch('/api/admin/newsletter/stats')
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(d){ if (d && d.ok){ subscribers = d.subscribers; refreshNewsBoxes(); } })
+      .catch(function(){});
+  }
+
+  // The count is needed before any send. If it has not loaded yet (or failed),
+  // fetch it again; null means it really could not be read — never treat an
+  // unknown count as "nobody subscribed".
+  function ensureCount(){
+    if (subscribers !== null) return Promise.resolve(subscribers);
+    return loadStats().then(function(){ return subscribers; });
+  }
+  var COUNT_ERR = 'Could not read the number of subscribers, so nothing was done. Please try again.';
+
+  // Upload form: the document is new, so it can never have been sent.
+  // Edit form: blocked once the newsletter for that document went out.
+  function refreshNewsBoxes(){
+    var upPublished = upStatus.value === 'published';
+    upNews.disabled = !upPublished;
+    if (upNews.disabled) upNews.checked = false;
+    upHint.textContent = !upPublished ? 'Set Status to Published to enable this option.'
+      : subscribers === null ? '' : pilots(subscribers) + ' would receive the email (activated accounts that opted in). It shows the title, category and revision label only.';
+
+    var edPublished = edStatus.value === 'published';
+    var sent = !!editingSentAt;
+    edNews.disabled = !edPublished || sent;
+    if (edNews.disabled) edNews.checked = false;
+    edHint.textContent = sent ? 'The newsletter for this document was already sent on ' + fmtDate(editingSentAt) + '.'
+      : !edPublished ? 'Set Status to Published to enable this option.'
+      : subscribers === null ? '' : pilots(subscribers) + ' would receive the email (activated accounts that opted in).';
+  }
+
+  function describeNewsletter(nl){
+    if (!nl) return '';
+    if (nl.ok){
+      var s = ' Newsletter sent to ' + pilots(nl.sent) + '.';
+      if (nl.failed) s += ' ' + nl.failed + ' could not be delivered (' + (nl.error || 'error') + ').';
+      return s;
+    }
+    return ' Newsletter NOT sent: ' + (NEWS_ERR[nl.error] || nl.error || 'unknown error') + '.';
+  }
+
+  function postNewsletter(id, test){
+    return fetch('/api/admin/newsletter/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'document', id: id, test: !!test })
+    })
+      .then(function(res){
+        if (res.status === 401){ window.location.href = 'admin-login.html'; return null; }
+        return res.json();
+      })
+      .then(function(d){ return d && d.newsletter ? d.newsletter : { ok: false, error: (d && d.error) || 'error' }; })
+      .catch(function(){ return { ok: false, error: 'connection problem' }; });
+  }
+
+  function say(el, kind, msg){
+    el.className = 'form-status' + (kind ? ' ' + kind : '');
+    el.textContent = msg || '';
+    el.style.display = kind ? 'block' : '';
+  }
+
+  function newsletterFromList(btn){
+    var id = Number(btn.dataset.id);
+    var test = btn.dataset.action === 'news-test';
+    var name = btn.dataset.name || 'this document';
+
+    function go(){
+      btn.disabled = true;
+      postNewsletter(id, test).then(function(nl){
+        btn.disabled = false;
+        if (test){
+          say(uploadStatus, nl.ok ? 'ok' : 'err', nl.ok ? 'Test email sent to the admin address. Check the inbox and the spam folder.' : 'Test email NOT sent: ' + (NEWS_ERR[nl.error] || nl.error || 'error') + '.');
+        } else {
+          say(uploadStatus, nl.ok ? 'ok' : 'err', describeNewsletter(nl).trim());
+          loadDocuments();
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    if (test){ go(); return; }
+    ensureCount().then(function(n){
+      if (n === null){ say(uploadStatus, 'err', COUNT_ERR); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (!n){ say(uploadStatus, 'err', 'Nobody is subscribed yet, so no email would be sent.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (!window.confirm('Send "' + name + '" by email to ' + pilots(n) + ' now? This cannot be undone.')) return;
+      go();
+    });
+  }
+
   function loadCategories(){
     return fetch('/api/admin/categories').then(function(res){ return res.json(); }).then(function(data){
       var cats = (data.categories || []).filter(function(c){ return c.kind === 'document'; });
@@ -192,12 +317,18 @@
   }
 
   function rowHtml(d){
+    var published = d.status === 'published';
+    var news = published
+      ? '<div class="muted">Newsletter: ' + (d.newsletter_sent_at ? 'sent ' + esc(fmtDate(d.newsletter_sent_at)) : 'not sent') + '</div>'
+      : '';
     return '<div class="doc-row">' +
-      '<div><div class="name">' + esc(d.title) + '</div><div class="muted">' + esc(d.file_name) + (d.file_size ? ' · ' + formatBytes(d.file_size) : '') + '</div></div>' +
+      '<div><div class="name">' + esc(d.title) + '</div><div class="muted">' + esc(d.file_name) + (d.file_size ? ' · ' + formatBytes(d.file_size) : '') + '</div>' + news + '</div>' +
       '<div class="muted">' + esc(d.category_name || '—') + '</div>' +
       '<div><span class="pill ' + d.status + '">' + esc(d.status) + '</span></div>' +
       '<div class="actions">' +
         '<button type="button" data-action="edit" data-id="' + d.id + '">Edit</button>' +
+        (published ? '<button type="button" data-action="news-test" data-id="' + d.id + '" data-name="' + esc(d.title) + '" title="Send one copy of the newsletter to the admin address only">Test email</button>' : '') +
+        (published && !d.newsletter_sent_at ? '<button type="button" data-action="news-send" data-id="' + d.id + '" data-name="' + esc(d.title) + '" title="Send the newsletter to all subscribers">Send newsletter</button>' : '') +
         '<button type="button" data-action="delete" data-id="' + d.id + '" data-name="' + esc(d.title) + '">Delete</button>' +
       '</div></div>';
   }
@@ -227,8 +358,11 @@
       return;
     }
 
+    var wantNews = !upNews.disabled && upNews.checked && upStatus.value === 'published';
+
     var fd = new FormData();
     fd.append('file', file);
+    fd.append('send_newsletter', '0');
     fd.append('title', document.getElementById('up-title').value.trim());
     fd.append('category_id', document.getElementById('up-category').value);
     fd.append('revision_label', document.getElementById('up-revision-label').value.trim());
@@ -237,38 +371,59 @@
     fd.append('status', document.getElementById('up-status').value);
 
     var btn = uploadForm.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    uploadStatus.textContent = 'Uploading…';
-    uploadStatus.style.display = 'block';
-    uploadStatus.className = 'form-status ok';
 
-    fetch('/api/admin/documents/upload', { method: 'POST', body: fd })
-      .then(function(res){ return res.json(); })
-      .then(function(data){
-        btn.disabled = false;
-        if (!data.ok){
+    function start(){
+      btn.disabled = true;
+      uploadStatus.textContent = 'Uploading…';
+      uploadStatus.style.display = 'block';
+      uploadStatus.className = 'form-status ok';
+
+      fetch('/api/admin/documents/upload', { method: 'POST', body: fd })
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          btn.disabled = false;
+          if (!data.ok){
+            uploadStatus.className = 'form-status err';
+            uploadStatus.textContent = data.error === 'pdf_only' ? 'Only PDF files are accepted.' :
+              data.error === 'file_too_large' ? 'File is too large (max 100 MB).' : 'Upload failed: ' + (data.error || 'unknown');
+            return;
+          }
+          var nl = data.newsletter;
+          uploadStatus.className = 'form-status ' + (nl && !nl.ok ? 'err' : 'ok');
+          uploadStatus.textContent = 'Uploaded.' + describeNewsletter(nl);
+          uploadForm.reset();
+          upCategory.innerHTML = categoryOptionsHtml;
+          refreshNewsBoxes();
+          loadDocuments();
+        })
+        .catch(function(){
+          btn.disabled = false;
           uploadStatus.className = 'form-status err';
-          uploadStatus.textContent = data.error === 'pdf_only' ? 'Only PDF files are accepted.' :
-            data.error === 'file_too_large' ? 'File is too large (max 100 MB).' : 'Upload failed: ' + (data.error || 'unknown');
-          return;
-        }
-        uploadStatus.className = 'form-status ok';
-        uploadStatus.textContent = 'Uploaded.';
-        uploadForm.reset();
-        upCategory.innerHTML = categoryOptionsHtml;
-        loadDocuments();
-      })
-      .catch(function(){
-        btn.disabled = false;
+          uploadStatus.textContent = 'Connection problem — please try again.';
+        });
+    }
+
+    if (!wantNews){ start(); return; }
+    ensureCount().then(function(n){
+      if (n === null){
         uploadStatus.className = 'form-status err';
-        uploadStatus.textContent = 'Connection problem — please try again.';
-      });
+        uploadStatus.textContent = COUNT_ERR;
+        return;
+      }
+      var question = n
+        ? 'Upload "' + document.getElementById('up-title').value.trim() + '" and send it by email to ' + pilots(n) + ' now? The email cannot be recalled.'
+        : 'Nobody is subscribed yet, so no email would be sent. Upload the document anyway?';
+      if (!window.confirm(question)) return;
+      fd.set('send_newsletter', n > 0 ? '1' : '0');
+      start();
+    });
   });
 
   editForm.addEventListener('submit', function(e){
     e.preventDefault();
     editStatus.className = 'form-status';
     editStatus.textContent = '';
+    var wantNews = !edNews.disabled && edNews.checked && edStatus.value === 'published';
     var payload = {
       id: document.getElementById('ed-id').value,
       title: document.getElementById('ed-title').value.trim(),
@@ -276,33 +431,65 @@
       revision_label: document.getElementById('ed-revision-label').value.trim(),
       revision_date: document.getElementById('ed-revision-date').value,
       description: document.getElementById('ed-description').value.trim(),
-      status: document.getElementById('ed-status').value
+      status: document.getElementById('ed-status').value,
+      send_newsletter: false
     };
-    fetch('/api/admin/documents/save', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-    })
-      .then(function(res){ return res.json(); })
-      .then(function(data){
-        if (!data.ok){
-          editStatus.className = 'form-status err';
-          editStatus.textContent = 'Could not save changes.';
-          return;
-        }
-        editForm.hidden = true;
-        loadDocuments();
+
+    function post(){
+      fetch('/api/admin/documents/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       })
-      .catch(function(){
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if (!data.ok){
+            editStatus.className = 'form-status err';
+            editStatus.textContent = 'Could not save changes.';
+            return;
+          }
+          editForm.hidden = true;
+          var nl = data.newsletter;
+          if (nl){
+            // The edit form is closing: show the outcome in the top status line.
+            say(uploadStatus, nl.ok ? 'ok' : 'err', 'Saved.' + describeNewsletter(nl));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          loadDocuments();
+        })
+        .catch(function(){
+          editStatus.className = 'form-status err';
+          editStatus.textContent = 'Connection problem — please try again.';
+        });
+    }
+
+    if (!wantNews){ post(); return; }
+    ensureCount().then(function(n){
+      if (n === null){
         editStatus.className = 'form-status err';
-        editStatus.textContent = 'Connection problem — please try again.';
-      });
+        editStatus.textContent = COUNT_ERR;
+        return;
+      }
+      var question = n
+        ? 'Save and send "' + payload.title + '" by email to ' + pilots(n) + ' now? The email cannot be recalled.'
+        : 'Nobody is subscribed yet, so no email would be sent. Save the changes anyway?';
+      if (!window.confirm(question)) return;
+      payload.send_newsletter = n > 0;
+      post();
+    });
   });
 
   edCancel.addEventListener('click', function(){ editForm.hidden = true; });
+
+  upStatus.addEventListener('change', refreshNewsBoxes);
+  edStatus.addEventListener('change', refreshNewsBoxes);
 
   document.addEventListener('click', function(e){
     var btn = e.target.closest('button[data-action]');
     if (!btn) return;
     var id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'news-test' || btn.dataset.action === 'news-send'){
+      newsletterFromList(btn);
+      return;
+    }
     if (btn.dataset.action === 'edit'){
       var d = documents.find(function(x){ return x.id === id; });
       if (!d) return;
@@ -313,6 +500,9 @@
       document.getElementById('ed-revision-date').value = d.revision_date || '';
       document.getElementById('ed-description').value = d.description || '';
       document.getElementById('ed-status').value = d.status;
+      editingSentAt = d.newsletter_sent_at || null;
+      edNews.checked = false;
+      refreshNewsBoxes();
       editForm.hidden = false;
       window.scrollTo({ top: editForm.offsetTop - 20, behavior: 'smooth' });
     }
@@ -324,6 +514,8 @@
     }
   });
 
+  refreshNewsBoxes();
+  loadStats();
   loadCategories().then(loadDocuments);
 })();
 </script>

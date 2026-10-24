@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email notifications — GioAviation.aero</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/img/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#071A2E">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="GioAviation.aero — home">
+      <img src="assets/img/logo-mark-dark.svg" alt="" width="40" height="40">
+      <span class="name">GioAviation<b>.aero</b></span>
+    </a>
+    <nav class="primary">
+      <a href="index.html">Home</a>
+      <a href="articoli.html">Articles</a>
+      <a href="richiedi-accesso.html">Request access</a>
+      <a href="login.html" class="btn ghost" style="padding:9px 18px;">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="cred-hero" style="padding-bottom:0;">
+    <div class="wrap" style="max-width:640px;">
+      <span class="eyebrow kicker">Email notifications</span>
+      <h1 id="title">Email notifications.</h1>
+      <p id="lead" style="margin-top:16px; font-size:1.0625rem; color:var(--ink-soft);">One email each time a new article or document is published on GioAviation.aero. Nothing else.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="max-width:640px;">
+      <div id="status" class="form-status" role="status"></div>
+
+      <!-- Opened from the link in an email: confirm the unsubscribe. -->
+      <div id="mode-unsub" class="admin-form" hidden>
+        <p style="margin:0;">Stop receiving email notifications from GioAviation.aero?</p>
+        <div class="actions-row">
+          <button type="button" id="unsub-btn" class="btn">Unsubscribe</button>
+          <a class="btn ghost" href="index.html">Keep them</a>
+        </div>
+      </div>
+
+      <!-- Signed-in member: choose. -->
+      <form id="mode-prefs" class="admin-form" hidden>
+        <label class="check" for="pref"><input type="checkbox" id="pref"><span>Email me when a new article or document is published. You can change this at any time.</span></label>
+        <div class="actions-row">
+          <button type="submit" class="btn">Save</button>
+          <a class="btn ghost" href="index.html">Back to the site</a>
+        </div>
+      </form>
+
+      <!-- Neither: ask to log in. -->
+      <div id="mode-login" class="admin-form" hidden>
+        <p style="margin:0;">Log in to choose whether you receive email notifications. Notifications are available to approved members.</p>
+        <div class="actions-row">
+          <a id="login-link" class="btn" href="login.html">Log in</a>
+          <a class="btn ghost" href="richiedi-accesso.html">Request access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logo-fine">
+      <a class="logo" href="index.html" aria-label="GioAviation.aero — home"><img src="assets/img/logo-mark-dark.svg" alt="" width="28" height="28"><span class="name">GioAviation<b>.aero</b></span></a>
+      <span class="fine">© 2026 GioAviation.aero</span>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="articoli.html">Articles</a>
+      <a href="login.html">Log in</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var u = params.get('u');
+  var t = params.get('t');
+  var status = document.getElementById('status');
+  var modes = {
+    unsub: document.getElementById('mode-unsub'),
+    prefs: document.getElementById('mode-prefs'),
+    login: document.getElementById('mode-login')
+  };
+
+  function show(name){
+    Object.keys(modes).forEach(function(k){ modes[k].hidden = (k !== name); });
+  }
+  function say(kind, msg){
+    status.className = 'form-status' + (kind ? ' ' + kind : '');
+    status.textContent = msg || '';
+  }
+
+  // ---- A) link from an email: ?u=<id>&t=<signature> -----------------------
+  if (u && t){
+    document.getElementById('title').textContent = 'Unsubscribe.';
+    show('unsub');
+    var btn = document.getElementById('unsub-btn');
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      say('', '');
+      fetch('/api/newsletter/unsubscribe?u=' + encodeURIComponent(u) + '&t=' + encodeURIComponent(t), { method: 'POST' })
+        .then(function(res){ return res.json().then(function(d){ return { ok: res.ok, data: d }; }); })
+        .then(function(r){
+          if (r.ok && r.data.ok){
+            show(null);
+            document.getElementById('title').textContent = 'You are unsubscribed.';
+            document.getElementById('lead').textContent = 'You will not receive any more notification emails. You can turn them back on any time after logging in.';
+            say('ok', 'Done. No further notification emails will be sent.');
+            return;
+          }
+          btn.disabled = false;
+          say('err', r.data && r.data.error === 'invalid_link'
+            ? 'This unsubscribe link is not valid. Log in and change the setting from this page instead.'
+            : 'Could not unsubscribe right now. Please try again in a moment.');
+        })
+        .catch(function(){
+          btn.disabled = false;
+          say('err', 'Connection problem. Please try again.');
+        });
+    });
+    return;
+  }
+
+  // ---- B) signed-in member -----------------------------------------------
+  var pref = document.getElementById('pref');
+  var form = document.getElementById('mode-prefs');
+
+  fetch('/api/newsletter/preferences', { credentials: 'same-origin', cache: 'no-store' })
+    .then(function(res){ return res.ok ? res.json() : null; })
+    .then(function(d){
+      if (!d || !d.ok){
+        document.getElementById('login-link').href = 'login.html?next=' + encodeURIComponent('/newsletter.html');
+        show('login');
+        return;
+      }
+      pref.checked = !!d.subscribed;
+      show('prefs');
+    })
+    .catch(function(){
+      show('login');
+    });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    say('', '');
+    var save = form.querySelector('button[type="submit"]');
+    save.disabled = true;
+    fetch('/api/newsletter/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscribed: pref.checked })
+    })
+      .then(function(res){ return res.json().then(function(d){ return { ok: res.ok, data: d }; }); })
+      .then(function(r){
+        save.disabled = false;
+        if (r.ok && r.data.ok){
+          say('ok', r.data.subscribed ? 'Saved. You will receive an email for each new article or document.' : 'Saved. You will not receive notification emails.');
+          return;
+        }
+        say('err', 'Could not save your choice. Please try again.');
+      })
+      .catch(function(){
+        save.disabled = false;
+        say('err', 'Connection problem. Please try again.');
+      });
+  });
+})();
+</script>
+</body>
+</html>

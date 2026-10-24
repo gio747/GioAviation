@@ -23,6 +23,7 @@
   ],
   "vars": {
     "RESEND_FROM": "GioAviation.com <access@gioaviation.com>",
+    "RESEND_FROM_NEWS": "GioAviation <news@gioaviation.com>",
     "ADMIN_NOTIFY_EMAIL": "admin@gioaviation.com"
   }
 }

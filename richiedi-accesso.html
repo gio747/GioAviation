@@ -86,6 +86,7 @@
         </div>
         <label class="check" for="terms"><input type="checkbox" id="terms" required><span>I understand this material is for training and reference only and is not approved operational data.</span></label>
         <label class="check" for="consent"><input type="checkbox" id="consent" required><span>I agree that my details are stored to review this request and manage my access.</span></label>
+        <label class="check" for="newsletter"><input type="checkbox" id="newsletter"><span>Optional: email me when a new article or document is published. Sent only if my access is approved, and I can unsubscribe at any time.</span></label>
         <button type="submit" class="btn" style="align-self:flex-start;">Send request</button>
         <div id="form-status" class="form-status" role="status"></div>
       </form>
@@ -146,7 +147,8 @@
       full_name: v('full_name'),
       email: v('email'),
       company: v('company'),
-      note: 'Role: ' + v('role') + '\nAircraft / course: ' + v('aircraft') + '\nIntended use: ' + v('use')
+      note: 'Role: ' + v('role') + '\nAircraft / course: ' + v('aircraft') + '\nIntended use: ' + v('use'),
+      newsletter: document.getElementById('newsletter').checked
     };
     fetch('/api/request-access', {
       method: 'POST',
