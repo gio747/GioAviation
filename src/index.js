@@ -36,14 +36,30 @@
 //     as of now only gioaviation.com is verified there, not gioaviation.aero)
 //   ADMIN_NOTIFY_EMAIL var    — where to send "new access request" notices.
 //     Optional: if unset, new requests are simply not notified by email —
-//     you'd only see them by opening admin.html.
+//     you'd only see them by opening admin.html. Also the address that
+//     receives the "Test email" copy of a newsletter.
+//   RESEND_FROM_NEWS   var    — sender of the newsletter, e.g.
+//     "GioAviation <news@gioaviation.com>". Same rule: the domain must be
+//     verified in Resend. No Reply-To is ever set (no-reply by design).
+//
+// Newsletter (migration-004-newsletter.sql): when the admin publishes an
+// article or a document he can tick "send as newsletter". One email goes to
+// every approved, activated pilot who opted in (pilots.newsletter_optin).
+// newsletter_sent_at on the article/document makes a second send impossible.
+// Members-only articles are announced by title and category only — no excerpt.
+// Unsubscribe links are signed with SESSION_SECRET (HMAC), so they need no
+// extra table, and the List-Unsubscribe header enables one-click unsubscribe
+// in Gmail/Outlook.
 //
 // Migration: run migration-002-backend.sql once (same way as schema.sql —
 // Cloudflare dashboard → D1 → gioaviation-db → Console, paste and run, or
 // `wrangler d1 execute gioaviation-db --file=migration-002-backend.sql`)
 // before deploying this file, or every request will fail on the new columns.
+// Same for migration-003 and migration-004.
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SITE_URL = "https://gioaviation.aero";
+const NEWSLETTER_BATCH = 100; // Resend batch endpoint limit
 const SESSION_COOKIE = "gio_session";
 const PILOT_SESSION_DAYS = 30;
 const ADMIN_SESSION_HOURS = 12;
@@ -69,6 +85,8 @@ const PUBLIC_PATHS = new Set([
   "/articoli",
   "/articolo.html",
   "/articolo",
+  "/newsletter.html",
+  "/newsletter",
 ]);
 
 // Pilot pages reachable even before the mandatory profile is completed.
@@ -179,6 +197,17 @@ async function handleApi(request, env, path, url) {
   // -- public articles --
   if (path === "/api/articles" && method === "GET") return apiArticlesPublicList(request, env, url);
 
+  // -- newsletter: pilot preferences and unsubscribe --
+  if (path === "/api/newsletter/preferences" && method === "GET") return apiNewsletterPrefsGet(request, env);
+  if (path === "/api/newsletter/preferences" && method === "POST") return apiNewsletterPrefsSave(request, env);
+  if (path === "/api/newsletter/unsubscribe" && (method === "GET" || method === "POST")) {
+    return apiNewsletterUnsubscribe(request, env, url);
+  }
+
+  // -- admin: newsletter --
+  if (path === "/api/admin/newsletter/stats" && method === "GET") return apiAdminNewsletterStats(request, env);
+  if (path === "/api/admin/newsletter/send" && method === "POST") return apiAdminNewsletterSend(request, env);
+
   // -- admin: categories --
   if (path === "/api/admin/categories" && method === "GET") return apiAdminCategoriesList(request, env);
   if (path === "/api/admin/categories/save" && method === "POST") return apiAdminCategorySave(request, env);
@@ -212,27 +241,32 @@ async function apiRequestAccess(request, env) {
   const fullName = String(body.full_name || "").trim();
   const company = String(body.company || "").trim();
   const note = String(body.note || "").trim();
+  // Optional, unticked by default in the form. Stored as consent only if the
+  // person actually ticked it (strict boolean true).
+  const newsletter = body.newsletter === true ? 1 : 0;
 
   if (!EMAIL_PATTERN.test(email)) return json({ ok: false, error: "invalid_email" }, 400);
   if (!fullName) return json({ ok: false, error: "missing_name" }, 400);
   if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
 
   const existing = await env.DB.prepare("SELECT status FROM pilots WHERE email = ?").bind(email).first();
+  const nowIso = new Date().toISOString();
+  const optinAt = newsletter ? nowIso : null;
 
   if (existing) {
     if (existing.status === "approved") return json({ ok: false, error: "already_approved" }, 409);
     if (existing.status === "pending") return json({ ok: false, error: "already_pending" }, 409);
     // previously rejected — allow a fresh request
     await env.DB.prepare(
-      "UPDATE pilots SET full_name = ?, company = ?, note = ?, status = 'pending', created_at = ? WHERE email = ?"
-    ).bind(fullName, company, note, new Date().toISOString(), email).run();
+      "UPDATE pilots SET full_name = ?, company = ?, note = ?, status = 'pending', created_at = ?, newsletter_optin = ?, newsletter_optin_at = ? WHERE email = ?"
+    ).bind(fullName, company, note, nowIso, newsletter, optinAt, email).run();
     await notifyAdminOfNewRequest(env, { email, fullName, company, note });
     return json({ ok: true });
   }
 
   await env.DB.prepare(
-    "INSERT INTO pilots (email, full_name, company, note, status, created_at) VALUES (?, ?, ?, ?, 'pending', ?)"
-  ).bind(email, fullName, company, note, new Date().toISOString()).run();
+    "INSERT INTO pilots (email, full_name, company, note, status, created_at, newsletter_optin, newsletter_optin_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
+  ).bind(email, fullName, company, note, nowIso, newsletter, optinAt).run();
 
   await notifyAdminOfNewRequest(env, { email, fullName, company, note });
 
@@ -646,7 +680,7 @@ async function apiAdminArticlesList(request, env) {
   // endpoint.
   const { results } = await env.DB.prepare(
     `SELECT a.id, a.slug, a.title, a.excerpt, a.body_markdown, a.status, a.access, a.created_at, a.updated_at, a.published_at,
-            a.category_id, c.name AS category_name
+            a.newsletter_sent_at, a.category_id, c.name AS category_name
      FROM articles a LEFT JOIN categories c ON c.id = a.category_id
      ORDER BY a.updated_at DESC`
   ).all();
@@ -688,7 +722,8 @@ async function apiAdminArticleSave(request, env) {
     await env.DB.prepare(
       `UPDATE articles SET category_id=?, slug=?, title=?, excerpt=?, body_markdown=?, status=?, access=?, updated_at=?, published_at=? WHERE id=?`
     ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, access, now, publishedAt, id).run();
-    return json({ ok: true, id });
+    const newsletter = await maybeSendNewsletter(env, body.send_newsletter === true, status, "article", id);
+    return json({ ok: true, id, newsletter });
   }
 
   const publishedAt = status === "published" ? now : null;
@@ -696,7 +731,9 @@ async function apiAdminArticleSave(request, env) {
     `INSERT INTO articles (category_id, slug, title, excerpt, body_markdown, status, access, created_at, updated_at, published_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(categoryId, slug, title, excerpt, bodyMarkdown, status, access, now, now, publishedAt).run();
-  return json({ ok: true, id: result.meta.last_row_id });
+  const newId = result.meta.last_row_id;
+  const newsletter = await maybeSendNewsletter(env, body.send_newsletter === true, status, "article", newId);
+  return json({ ok: true, id: newId, newsletter });
 }
 
 async function apiAdminArticleDelete(request, env) {
@@ -843,7 +880,7 @@ async function apiAdminDocumentsList(request, env) {
 
   const { results } = await env.DB.prepare(
     `SELECT d.id, d.title, d.description, d.file_name, d.file_size, d.revision_label, d.revision_date,
-            d.status, d.uploaded_at, d.category_id, c.name AS category_name
+            d.status, d.uploaded_at, d.newsletter_sent_at, d.category_id, c.name AS category_name
      FROM documents d LEFT JOIN categories c ON c.id = d.category_id
      ORDER BY d.uploaded_at DESC`
   ).all();
@@ -899,7 +936,9 @@ async function apiAdminDocumentUpload(request, env) {
     return json({ ok: false, error: "db: " + (e && e.message) }, 500);
   }
 
-  return json({ ok: true, id: result.meta.last_row_id });
+  const newId = result.meta.last_row_id;
+  const newsletter = await maybeSendNewsletter(env, form.get("send_newsletter") === "1", status, "document", newId);
+  return json({ ok: true, id: newId, newsletter });
 }
 
 async function apiAdminDocumentSave(request, env) {
@@ -924,7 +963,8 @@ async function apiAdminDocumentSave(request, env) {
   await env.DB.prepare(
     `UPDATE documents SET title=?, description=?, category_id=?, revision_label=?, revision_date=?, status=? WHERE id=?`
   ).bind(title, description, categoryId, revisionLabel, revisionDate, status, id).run();
-  return json({ ok: true });
+  const newsletter = await maybeSendNewsletter(env, body.send_newsletter === true, status, "document", id);
+  return json({ ok: true, newsletter });
 }
 
 async function apiAdminDocumentDelete(request, env) {
@@ -941,6 +981,278 @@ async function apiAdminDocumentDelete(request, env) {
   }
   await env.DB.prepare("DELETE FROM documents WHERE id = ?").bind(id).run();
   return json({ ok: true });
+}
+
+// -------------------------------------------------------------- newsletter --
+// One email per published article or document, sent only when the admin
+// ticks "send as newsletter" (or presses "Send newsletter" on a published
+// item). Recipients: approved pilots who activated their account — so the
+// address is verified — and opted in. No Reply-To is set: it is a no-reply
+// sender by design.
+
+async function maybeSendNewsletter(env, requested, status, kind, id) {
+  if (!requested) return undefined;
+  if (status !== "published") return { ok: false, error: "not_published" };
+  try {
+    return await sendNewsletterFor(env, kind, id, {});
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+async function newsletterRecipients(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, email FROM pilots
+     WHERE status = 'approved' AND newsletter_optin = 1 AND password_hash IS NOT NULL`
+  ).all();
+  return results;
+}
+
+// Returns { ok, sent, failed, total, error? } or { ok:false, error } — never
+// throws on a send problem, so the article/document save that triggered it is
+// reported as saved either way.
+async function sendNewsletterFor(env, kind, id, options) {
+  const test = !!(options && options.test);
+  if (kind !== "article" && kind !== "document") return { ok: false, error: "bad_kind" };
+  const isArticle = kind === "article";
+  const table = isArticle ? "articles" : "documents"; // fixed mapping, never user input
+
+  const item = isArticle
+    ? await env.DB.prepare(
+        `SELECT a.id, a.slug, a.title, a.excerpt, a.access, a.status, a.newsletter_sent_at, c.name AS category_name
+         FROM articles a LEFT JOIN categories c ON c.id = a.category_id WHERE a.id = ?`
+      ).bind(id).first()
+    : await env.DB.prepare(
+        `SELECT d.id, d.title, d.revision_label, d.status, d.newsletter_sent_at, c.name AS category_name
+         FROM documents d LEFT JOIN categories c ON c.id = d.category_id WHERE d.id = ?`
+      ).bind(id).first();
+
+  if (!item) return { ok: false, error: "not_found" };
+  if (item.status !== "published") return { ok: false, error: "not_published" };
+  if (!test && item.newsletter_sent_at) return { ok: false, error: "already_sent", sent_at: item.newsletter_sent_at };
+  if (!env.RESEND_API_KEY) return { ok: false, error: "resend_not_configured" };
+  if (!env.SESSION_SECRET) return { ok: false, error: "session_secret_missing" }; // signs unsubscribe links
+
+  let recipients;
+  if (test) {
+    if (!env.ADMIN_NOTIFY_EMAIL) return { ok: false, error: "no_test_address" };
+    recipients = [{ id: 0, email: env.ADMIN_NOTIFY_EMAIL }];
+  } else {
+    recipients = await newsletterRecipients(env);
+    if (!recipients.length) return { ok: false, error: "no_subscribers" };
+
+    // Claim before sending: the conditional UPDATE is what stops a double
+    // click, or two admin tabs, from sending the same newsletter twice.
+    const claim = await env.DB.prepare(
+      `UPDATE ${table} SET newsletter_sent_at = ? WHERE id = ? AND newsletter_sent_at IS NULL`
+    ).bind(new Date().toISOString(), id).run();
+    if (!claim.meta || !claim.meta.changes) return { ok: false, error: "already_sent" };
+  }
+
+  const from = env.RESEND_FROM_NEWS || "GioAviation <news@gioaviation.com>";
+  let sent = 0;
+  let failed = 0;
+  let firstError = null;
+
+  for (let i = 0; i < recipients.length; i += NEWSLETTER_BATCH) {
+    const chunk = recipients.slice(i, i + NEWSLETTER_BATCH);
+    try {
+      const payload = [];
+      for (const recipient of chunk) {
+        payload.push(await buildNewsletterMessage(env, { from, isArticle, item, recipient, test }));
+      }
+      const resp = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`Resend error ${resp.status}: ${text.slice(0, 300)}`);
+      }
+      sent += chunk.length;
+    } catch (e) {
+      failed += chunk.length;
+      if (!firstError) firstError = String(e && e.message ? e.message : e);
+    }
+  }
+
+  if (!test && sent === 0) {
+    // Nothing went out at all: release the claim so the send can be retried.
+    await env.DB.prepare(`UPDATE ${table} SET newsletter_sent_at = NULL WHERE id = ?`).bind(id).run();
+  }
+
+  return { ok: sent > 0, test, sent, failed, total: recipients.length, error: firstError || undefined };
+}
+
+async function buildNewsletterMessage(env, { from, isArticle, item, recipient, test }) {
+  const membersOnly = !isArticle || item.access === "members";
+  const kindLabel = isArticle ? "New article" : "New document";
+  const cta = isArticle ? "Read the article" : "Open the library";
+  const link = isArticle
+    ? `${SITE_URL}/articolo.html?slug=${encodeURIComponent(item.slug)}`
+    : `${SITE_URL}/risorse.html`;
+
+  const token = await hmacSign(env, `unsub:${recipient.id}`);
+  const q = `u=${recipient.id}&t=${encodeURIComponent(token)}`;
+  const unsubscribePage = `${SITE_URL}/newsletter.html?${q}`;
+  const unsubscribeOneClick = `${SITE_URL}/api/newsletter/unsubscribe?${q}`;
+
+  // Members-only articles and all documents: title and category only.
+  // Public articles also carry the excerpt the admin wrote.
+  const excerpt = isArticle && !membersOnly && item.excerpt ? String(item.excerpt).trim() : "";
+  const metaParts = [item.category_name, !isArticle ? item.revision_label : null].filter(Boolean);
+  const accessNote = membersOnly ? "Members only. You will be asked to log in." : "";
+  const subjectTitle = String(item.title).replace(/\s+/g, " ").trim();
+  const subject = `${test ? "[TEST] " : ""}${kindLabel}: ${subjectTitle}`;
+
+  const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#F5F7FA;">
+<div style="max-width:560px;margin:0 auto;padding:28px 20px;font-family:Arial,Helvetica,sans-serif;color:#0E1B2A;line-height:1.55;">
+  <p style="margin:0 0 18px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1B6FB0;">GioAviation.aero &middot; ${kindLabel}</p>
+  <h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0C2D4F;">${escapeHtml(item.title)}</h1>
+  ${metaParts.length ? `<p style="margin:0 0 14px;font-size:14px;color:#627286;">${metaParts.map(escapeHtml).join(" &middot; ")}</p>` : ""}
+  ${excerpt ? `<p style="margin:0 0 6px;font-size:16px;color:#3D4E62;">${escapeHtml(excerpt)}</p>` : ""}
+  <p style="margin:22px 0 8px;"><a href="${link}" style="display:inline-block;background:#E0A93B;color:#0B1F36;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:4px;">${cta}</a></p>
+  ${accessNote ? `<p style="margin:0;font-size:13px;color:#627286;">${accessNote}</p>` : ""}
+  <hr style="border:0;border-top:1px solid #DDE5EE;margin:28px 0 14px;">
+  <p style="margin:0;font-size:12px;color:#627286;">You receive this email because you chose email notifications on GioAviation.aero. <a href="${unsubscribePage}" style="color:#627286;">Unsubscribe</a>. This address does not accept replies. Study and reference material, not approved operational data.</p>
+</div>
+</body></html>`;
+
+  const text = [
+    `GioAviation.aero - ${kindLabel}`,
+    "",
+    item.title,
+    metaParts.length ? metaParts.join(" - ") : "",
+    excerpt ? `\n${excerpt}` : "",
+    "",
+    `${cta}: ${link}`,
+    accessNote,
+    "",
+    "--",
+    "You receive this email because you chose email notifications on GioAviation.aero.",
+    `Unsubscribe: ${unsubscribePage}`,
+    "This address does not accept replies. Study and reference material, not approved operational data.",
+  ].filter((line, i, arr) => !(line === "" && arr[i - 1] === "")).join("\n");
+
+  return {
+    from,
+    to: [recipient.email],
+    subject,
+    html,
+    text,
+    headers: {
+      "List-Unsubscribe": `<${unsubscribeOneClick}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  };
+}
+
+// --- pilot: own preference (logged in) ---
+
+async function currentApprovedPilot(request, env) {
+  let session = null;
+  try {
+    session = await getSession(request, env);
+  } catch (e) {
+    return null;
+  }
+  if (!session || session.role !== "pilot" || !env.DB) return null;
+  const pilot = await env.DB.prepare("SELECT id, status, newsletter_optin FROM pilots WHERE id = ?").bind(session.id).first();
+  return pilot && pilot.status === "approved" ? pilot : null;
+}
+
+async function apiNewsletterPrefsGet(request, env) {
+  const pilot = await currentApprovedPilot(request, env);
+  if (!pilot) return json({ ok: false, error: "unauthorized" }, 401);
+  return json({ ok: true, subscribed: !!pilot.newsletter_optin }, 200, { "Cache-Control": "private, no-store" });
+}
+
+async function apiNewsletterPrefsSave(request, env) {
+  const pilot = await currentApprovedPilot(request, env);
+  if (!pilot) return json({ ok: false, error: "unauthorized" }, 401);
+
+  const body = await safeJson(request);
+  if (!body || typeof body.subscribed !== "boolean") return json({ ok: false, error: "bad_request" }, 400);
+
+  const now = new Date().toISOString();
+  if (body.subscribed) {
+    // Keep the original consent date if they were already subscribed.
+    await env.DB.prepare(
+      `UPDATE pilots SET newsletter_optin_at = CASE WHEN newsletter_optin = 1 THEN newsletter_optin_at ELSE ? END,
+                         newsletter_optin = 1 WHERE id = ?`
+    ).bind(now, pilot.id).run();
+  } else {
+    await env.DB.prepare("UPDATE pilots SET newsletter_optin = 0, newsletter_optout_at = ? WHERE id = ?")
+      .bind(now, pilot.id).run();
+  }
+  return json({ ok: true, subscribed: body.subscribed });
+}
+
+// --- unsubscribe link from an email (signed, no login) ---
+// POST unsubscribes (it is also what Gmail/Outlook call for one-click
+// unsubscribe). GET never changes anything: mail scanners prefetch links, so
+// it only forwards to the confirmation page.
+
+async function apiNewsletterUnsubscribe(request, env, url) {
+  if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
+
+  const id = Number(url.searchParams.get("u"));
+  const token = url.searchParams.get("t") || "";
+  if (!Number.isInteger(id) || id <= 0 || !token) return json({ ok: false, error: "invalid_link" }, 400);
+
+  let expected;
+  try {
+    expected = await hmacSign(env, `unsub:${id}`);
+  } catch (e) {
+    return json({ ok: false, error: "not_configured" }, 500);
+  }
+  if (!timingSafeEqualStr(token, expected)) return json({ ok: false, error: "invalid_link" }, 400);
+
+  if (request.method === "GET") {
+    const to = new URL("/newsletter.html", url);
+    to.searchParams.set("u", String(id));
+    to.searchParams.set("t", token);
+    return Response.redirect(to, 302);
+  }
+
+  await env.DB.prepare("UPDATE pilots SET newsletter_optin = 0, newsletter_optout_at = ? WHERE id = ?")
+    .bind(new Date().toISOString(), id).run();
+  return json({ ok: true });
+}
+
+// --- admin ---
+
+async function apiAdminNewsletterStats(request, env) {
+  if (!(await requireAdmin(request, env))) return json({ ok: false, error: "unauthorized" }, 401);
+  if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
+
+  const subs = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM pilots WHERE status = 'approved' AND newsletter_optin = 1 AND password_hash IS NOT NULL"
+  ).first();
+  const approved = await env.DB.prepare("SELECT COUNT(*) AS n FROM pilots WHERE status = 'approved'").first();
+  return json({ ok: true, subscribers: subs ? subs.n : 0, approved: approved ? approved.n : 0 });
+}
+
+// Used by the "Send newsletter" and "Test email" buttons on already-saved
+// items. test:true sends a single copy to ADMIN_NOTIFY_EMAIL and does not mark
+// the item as sent.
+async function apiAdminNewsletterSend(request, env) {
+  if (!(await requireAdmin(request, env))) return json({ ok: false, error: "unauthorized" }, 401);
+  if (!env.DB) return json({ ok: false, error: "db_not_configured" }, 500);
+
+  const body = await safeJson(request);
+  const id = body && Number(body.id);
+  const kind = body && body.kind;
+  if (!id || (kind !== "article" && kind !== "document")) return json({ ok: false, error: "bad_request" }, 400);
+
+  try {
+    const newsletter = await sendNewsletterFor(env, kind, id, { test: body.test === true });
+    return json({ ok: true, newsletter });
+  } catch (e) {
+    return json({ ok: false, error: String(e && e.message ? e.message : e) }, 500);
+  }
 }
 
 // ------------------------------------------------------------------ email --
